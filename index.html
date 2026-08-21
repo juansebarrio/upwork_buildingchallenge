@@ -4,7 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Upright Scaffolding — Access &amp; Temporary Works</title>
-<meta name="description" content="Design, delivery and certified assembly of façade and access scaffolding for construction, restoration and industry.">
+<meta name="description" content="Design, delivery and certified erection of façade and access scaffolding for construction, restoration and industry.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Upright Scaffolding — Access &amp; Temporary Works">
+<meta property="og:description" content="Design, delivery and certified erection of façade and access scaffolding for construction, restoration and industry.">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Crect width='24' height='24' rx='5' fill='%23c94b10'/%3E%3Cpath d='M7 19V5M17 19V5M7 8.5h10M7 15.5h10M7 15.5 17 8.5' stroke='white' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -27,7 +32,7 @@
     --bg:#ece6da;
     --ink:#211c13;
     --body:#55503f;
-    --muted:#6b6355;
+    --muted:#5e574a;
     --hair:rgba(33,28,19,.16);
     --accent:#c94b10;
     --accent-hover:#a83c0a;
@@ -39,7 +44,11 @@
     font-family:"Archivo",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
     color:var(--ink);
     background:radial-gradient(120% 90% at 72% 12%, #f5f0e5 0%, #ece6da 55%, #e2dbca 100%);
-    overflow:hidden;
+    overflow:hidden auto;
+  }
+  .sr-only{
+    position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+    overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;
   }
   canvas#scene{position:fixed;inset:0;z-index:0;display:block}
 
@@ -76,8 +85,8 @@
   /* ── hero copy ───────────────────────────────── */
   .hero{
     position:relative;z-index:10;
-    height:100svh;max-width:1440px;margin:0 auto;
-    padding:88px clamp(20px,4vw,52px) 0;
+    min-height:100vh;min-height:100svh;max-width:1440px;margin:0 auto;
+    padding:96px clamp(20px,4vw,52px) 48px;
     display:flex;align-items:center;
   }
   .copy{width:min(600px,47%)}
@@ -92,7 +101,7 @@
 
   h1{
     font-family:"Archivo Black",Archivo,sans-serif;font-weight:400;
-    font-size:clamp(46px,6.2vw,88px);line-height:.96;
+    font-size:clamp(44px,5.7vw,82px);line-height:.96;
     text-transform:uppercase;letter-spacing:-.005em;
   }
   h1 .line{display:block}
@@ -154,9 +163,10 @@
     font:inherit;color:inherit;letter-spacing:inherit;text-transform:inherit;
     background:none;border:1px solid var(--hair);border-radius:7px;
     padding:7px 12px;cursor:pointer;
-    opacity:0;pointer-events:none;transition:opacity .5s, border-color .18s, color .18s;
+    opacity:0;visibility:hidden;pointer-events:none;
+    transition:opacity .5s, visibility .5s, border-color .18s, color .18s;
   }
-  #hud.secure #replay{opacity:1;pointer-events:auto}
+  #hud.secure #replay{opacity:1;visibility:visible;pointer-events:auto}
   #replay:hover{border-color:var(--ink);color:var(--ink)}
 
   /* ── scroll cue ──────────────────────────────── */
@@ -184,14 +194,20 @@
   #scrim{display:none}
   @media (max-width:940px){
     .nav-links{display:none}
-    .hero{align-items:flex-start;padding-top:110px}
+    .hero{align-items:flex-start;padding-top:110px;padding-bottom:120px}
     .copy{width:100%}
-    .stats{gap:24px;flex-wrap:wrap}
+    .sub{margin-top:20px;font-size:16px}
+    .stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 24px;margin-top:34px}
+    .stat span{font-size:22px}
     .cue{display:none}
+    #replay{white-space:nowrap}
     #scrim{
       display:block;position:fixed;inset:0;z-index:5;pointer-events:none;
       background:linear-gradient(180deg,rgba(238,232,220,.95) 0%,rgba(238,232,220,.85) 42%,rgba(238,232,220,.5) 68%,rgba(238,232,220,.12) 100%);
     }
+  }
+  @media (max-width:600px){
+    #hud{left:20px;right:20px;justify-content:space-between;letter-spacing:.12em;gap:10px}
   }
 
   @media (prefers-reduced-motion: reduce){
@@ -232,11 +248,11 @@
     <p class="sub rv" style="--d:.72s">
       Upright designs, delivers and erects <b>certified façade and access
       scaffolding</b> for construction, restoration and industry — on site in
-      48&nbsp;hours, inspected weekly, dismantled on schedule. So your crew can
-      get on with the build.
+      as little as 48&nbsp;hours, inspected weekly, dismantled on schedule. So
+      your crew can get on with the build.
     </p>
     <div class="cta-row rv" style="--d:.95s">
-      <a class="btn" href="#quote">
+      <a class="btn" href="mailto:quotes@uprightscaffolding.com?subject=Quote%20request">
         Get a free quote
         <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
           <path d="M2 8h11M9 3.5 13.5 8 9 12.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
@@ -245,18 +261,19 @@
       <a class="link" href="#projects">See our work</a>
     </div>
     <div class="stats rv" style="--d:1.25s">
-      <div class="stat"><span>1,200+</span><label>structures erected</label></div>
+      <div class="stat"><span>1,200+</span><label>scaffolds erected</label></div>
       <div class="stat"><span>0</span><label>lost-time incidents · since ’19</label></div>
-      <div class="stat"><span>48h</span><label>average mobilisation</label></div>
+      <div class="stat"><span>48h</span><label>average mobilization</label></div>
     </div>
   </div>
 </header>
 
-<div id="hud" aria-live="polite">
+<div id="hud">
   <span class="dot"></span>
-  <span id="hud-txt">Mobilising crew</span>
-  <button id="replay" type="button" title="Replay assembly">Rebuild ↻</button>
+  <span id="hud-txt">Mobilizing crew</span>
+  <button id="replay" type="button" title="Rebuild the scaffold">Rebuild ↻</button>
 </div>
+<span id="sr-status" class="sr-only" aria-live="polite"></span>
 
 <div class="cue" aria-hidden="true"><i></i>Scroll</div>
 
@@ -498,10 +515,16 @@ if (matchMedia('(pointer:fine)').matches) {
 const hud = document.getElementById('hud');
 const hudTxt = document.getElementById('hud-txt');
 const replayBtn = document.getElementById('replay');
-let lastHud = '';
+const srStatus = document.getElementById('sr-status');
+const secureMsg = () => innerWidth < 600 ? 'Scaffold secure' : 'Scaffold secure · OSHA 1926';
+let lastHud = '', announced = false;
 function setHud(msg, secure) {
   if (msg !== lastHud) { hudTxt.textContent = msg; lastHud = msg; }
   hud.classList.toggle('secure', !!secure);
+  if (secure && !announced) {           // announce completion once, not every %
+    srStatus.textContent = 'Scaffold assembled.';
+    announced = true;
+  }
 }
 
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -523,8 +546,8 @@ function frame(dt) {
       p.mesh.position.y = p.ty + p.drop * (1 - easeOut(k));
       if (k >= .55) ready++;
     }
-    if (t >= BUILD_END) setHud('Scaffold secure · EN 12811', true);
-    else setHud('Assembling · ' + Math.round((ready / piezas.length) * 100) + '%', false);
+    if (t >= BUILD_END) setHud(secureMsg(), true);
+    else setHud('Erecting · ' + Math.round((ready / piezas.length) * 100) + '%', false);
   }
 
   mx += (tmx - mx) * .04;
@@ -534,7 +557,22 @@ function frame(dt) {
   camera.lookAt(0, 7.9, 0);
   renderer.render(scene, camera);
 }
-renderer.setAnimationLoop(() => frame(Math.min(clock.getDelta(), .05)));
+
+if (reduced) {
+  // static hero: everything in place, one render per resize, no sway/parallax
+  for (const p of piezas) { p.mesh.visible = true; p.mesh.position.y = p.ty; }
+  setHud(secureMsg(), true);
+  const renderOnce = () => {
+    camera.position.set(Math.sin(.5) * camDist, camDist * .38, Math.cos(.5) * camDist);
+    camera.lookAt(0, 7.9, 0);
+    renderer.render(scene, camera);
+  };
+  renderOnce();
+  addEventListener('resize', renderOnce);            // fit() runs first
+  document.fonts?.ready?.then(() => renderOnce());   // banner texture redraw
+} else {
+  renderer.setAnimationLoop(() => frame(Math.min(clock.getDelta(), .05)));
+}
 </script>
 </body>
 </html>
