@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Upright Scaffolding — Access &amp; Temporary Works</title>
+<meta name="description" content="Design, delivery and certified assembly of façade and access scaffolding for construction, restoration and industry.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Archivo+Black&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.184.0/build/three.module.js"
+  },
+  "integrity": {
+    "https://unpkg.com/three@0.184.0/build/three.module.js": "sha384-8FCZ1eVO6it4+pbec2aDtnTrwjWXZLJRC+MAGCIPDgsYnUrl/E0A2YlF8ioMKI/J",
+    "https://unpkg.com/three@0.184.0/build/three.core.js": "sha384-dw2ooPewaEIrAgl6oFDBmmBWCE9oW9LxRGcfwZ0hLvEprzo202wXl7vCYHRlSnOT"
+  }
+}
+</script>
+
+<style>
+  :root{
+    --bg:#ece6da;
+    --ink:#211c13;
+    --body:#55503f;
+    --muted:#6b6355;
+    --hair:rgba(33,28,19,.16);
+    --accent:#c94b10;
+    --accent-hover:#a83c0a;
+    --accent-bright:#d95318;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    font-family:"Archivo",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    color:var(--ink);
+    background:radial-gradient(120% 90% at 72% 12%, #f5f0e5 0%, #ece6da 55%, #e2dbca 100%);
+    overflow:hidden;
+  }
+  canvas#scene{position:fixed;inset:0;z-index:0;display:block}
+
+  /* ── nav ─────────────────────────────────────── */
+  nav{
+    position:fixed;top:0;left:0;right:0;z-index:30;
+    display:flex;align-items:center;gap:36px;
+    padding:22px clamp(20px,4vw,52px);
+  }
+  .logo{display:flex;align-items:center;gap:10px;color:var(--ink);text-decoration:none}
+  .logo svg{display:block}
+  .logo b{
+    font-family:"Archivo Black",Archivo,sans-serif;font-weight:400;
+    font-size:17px;letter-spacing:.08em;
+  }
+  .logo small{
+    font-family:"IBM Plex Mono",monospace;font-size:9px;letter-spacing:.22em;
+    color:var(--muted);display:block;margin-top:1px;
+  }
+  .nav-links{display:flex;gap:28px;margin-left:auto}
+  .nav-links a{
+    color:var(--body);text-decoration:none;font-size:14px;font-weight:500;
+    letter-spacing:.02em;transition:color .18s;
+  }
+  .nav-links a:hover{color:var(--ink)}
+  .nav-phone{
+    font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:500;
+    color:var(--ink);text-decoration:none;
+    border:1px solid var(--hair);border-radius:8px;padding:9px 14px;
+    transition:border-color .18s, background .18s;
+  }
+  .nav-phone:hover{border-color:var(--ink);background:rgba(255,255,255,.35)}
+
+  /* ── hero copy ───────────────────────────────── */
+  .hero{
+    position:relative;z-index:10;
+    height:100svh;max-width:1440px;margin:0 auto;
+    padding:88px clamp(20px,4vw,52px) 0;
+    display:flex;align-items:center;
+  }
+  .copy{width:min(600px,47%)}
+
+  .eyebrow{
+    display:flex;align-items:center;gap:10px;
+    font-family:"IBM Plex Mono",monospace;font-size:11.5px;font-weight:500;
+    letter-spacing:.28em;text-transform:uppercase;color:var(--muted);
+    margin-bottom:26px;
+  }
+  .eyebrow i{width:8px;height:8px;background:var(--accent);flex:none}
+
+  h1{
+    font-family:"Archivo Black",Archivo,sans-serif;font-weight:400;
+    font-size:clamp(46px,6.2vw,88px);line-height:.96;
+    text-transform:uppercase;letter-spacing:-.005em;
+  }
+  h1 .line{display:block}
+  h1 em{font-style:normal;color:var(--accent)}
+
+  .sub{
+    margin-top:26px;font-size:16.5px;line-height:1.68;color:var(--body);
+    max-width:46ch;
+  }
+  .sub b{color:var(--ink);font-weight:600}
+
+  .cta-row{display:flex;align-items:center;gap:26px;margin-top:36px;flex-wrap:wrap}
+  .btn{
+    display:inline-flex;align-items:center;gap:10px;
+    background:var(--accent);color:#fff;text-decoration:none;
+    font-weight:600;font-size:15px;letter-spacing:.02em;
+    padding:16px 26px;border-radius:9px;
+    box-shadow:0 10px 24px -10px rgba(169,60,10,.55);
+    transition:background .18s, transform .18s, box-shadow .18s;
+  }
+  .btn svg{transition:transform .18s}
+  .btn:hover{background:var(--accent-hover);transform:translateY(-1px);
+    box-shadow:0 14px 28px -10px rgba(169,60,10,.6)}
+  .btn:hover svg{transform:translateX(3px)}
+  .link{
+    color:var(--ink);text-decoration:none;font-weight:600;font-size:15px;
+    border-bottom:1.5px solid var(--hair);padding-bottom:3px;
+    transition:border-color .18s;
+  }
+  .link:hover{border-color:var(--accent)}
+
+  .stats{
+    display:flex;gap:clamp(24px,3.4vw,52px);
+    margin-top:52px;padding-top:26px;border-top:1px solid var(--hair);
+  }
+  .stat span{
+    font-family:"IBM Plex Mono",monospace;font-weight:500;
+    font-size:25px;color:var(--ink);display:block;
+  }
+  .stat label{
+    display:block;margin-top:6px;font-size:11px;font-weight:500;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
+  }
+
+  /* ── site HUD (bottom right) ─────────────────── */
+  #hud{
+    position:fixed;right:clamp(20px,3vw,44px);bottom:30px;z-index:20;
+    display:flex;align-items:center;gap:14px;
+    font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:500;
+    letter-spacing:.18em;text-transform:uppercase;color:var(--muted);
+  }
+  #hud .dot{
+    width:8px;height:8px;border-radius:50%;background:var(--accent-bright);
+    animation:pulse 1s ease-in-out infinite;
+  }
+  #hud.secure .dot{background:#4d7a45;animation:none}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+  #replay{
+    font:inherit;color:inherit;letter-spacing:inherit;text-transform:inherit;
+    background:none;border:1px solid var(--hair);border-radius:7px;
+    padding:7px 12px;cursor:pointer;
+    opacity:0;pointer-events:none;transition:opacity .5s, border-color .18s, color .18s;
+  }
+  #hud.secure #replay{opacity:1;pointer-events:auto}
+  #replay:hover{border-color:var(--ink);color:var(--ink)}
+
+  /* ── scroll cue ──────────────────────────────── */
+  .cue{
+    position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:20;
+    display:flex;flex-direction:column;align-items:center;gap:8px;
+    font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.3em;
+    color:var(--muted);text-transform:uppercase;
+  }
+  .cue i{
+    width:1px;height:34px;background:var(--hair);position:relative;overflow:hidden;
+  }
+  .cue i::after{
+    content:"";position:absolute;left:0;top:-40%;width:100%;height:40%;
+    background:var(--accent);animation:cue 2.2s ease-in-out infinite;
+  }
+  @keyframes cue{0%{top:-40%}70%,100%{top:110%}}
+
+  /* ── reveal animation ────────────────────────── */
+  .rv{opacity:0;transform:translateY(26px);
+    animation:rv .95s cubic-bezier(.2,.65,.2,1) forwards;animation-delay:var(--d,0s)}
+  @keyframes rv{to{opacity:1;transform:none}}
+
+  /* ── mobile ──────────────────────────────────── */
+  #scrim{display:none}
+  @media (max-width:940px){
+    .nav-links{display:none}
+    .hero{align-items:flex-start;padding-top:110px}
+    .copy{width:100%}
+    .stats{gap:24px;flex-wrap:wrap}
+    .cue{display:none}
+    #scrim{
+      display:block;position:fixed;inset:0;z-index:5;pointer-events:none;
+      background:linear-gradient(180deg,rgba(238,232,220,.95) 0%,rgba(238,232,220,.85) 42%,rgba(238,232,220,.5) 68%,rgba(238,232,220,.12) 100%);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .rv{animation:none;opacity:1;transform:none}
+    .cue i::after{animation:none}
+    #hud .dot{animation:none}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="#">
+    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M5 22V2M19 22V2M5 6.5h14M5 12h14M5 17.5h14" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+      <path d="M5 17.5 19 6.5" stroke="#c94b10" stroke-width="1.9" stroke-linecap="round"/>
+    </svg>
+    <span><b>UPRIGHT</b><small>SCAFFOLDING CO.</small></span>
+  </a>
+  <div class="nav-links">
+    <a href="#services">Services</a>
+    <a href="#projects">Projects</a>
+    <a href="#safety">Safety</a>
+    <a href="#contact">Contact</a>
+  </div>
+  <a class="nav-phone" href="tel:+15550124477">(555) 012-4477</a>
+</nav>
+
+<div id="scrim"></div>
+
+<header class="hero">
+  <div class="copy">
+    <p class="eyebrow rv" style="--d:.1s"><i></i>Scaffolding · Access · Temporary works</p>
+    <h1>
+      <span class="line rv" style="--d:.25s">We build</span>
+      <span class="line rv" style="--d:.42s">the <em>way up.</em></span>
+    </h1>
+    <p class="sub rv" style="--d:.72s">
+      Upright designs, delivers and erects <b>certified façade and access
+      scaffolding</b> for construction, restoration and industry — on site in
+      48&nbsp;hours, inspected weekly, dismantled on schedule. So your crew can
+      get on with the build.
+    </p>
+    <div class="cta-row rv" style="--d:.95s">
+      <a class="btn" href="#quote">
+        Get a free quote
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M2 8h11M9 3.5 13.5 8 9 12.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+      <a class="link" href="#projects">See our work</a>
+    </div>
+    <div class="stats rv" style="--d:1.25s">
+      <div class="stat"><span>1,200+</span><label>structures erected</label></div>
+      <div class="stat"><span>0</span><label>lost-time incidents · since ’19</label></div>
+      <div class="stat"><span>48h</span><label>average mobilisation</label></div>
+    </div>
+  </div>
+</header>
+
+<div id="hud" aria-live="polite">
+  <span class="dot"></span>
+  <span id="hud-txt">Mobilising crew</span>
+  <button id="replay" type="button" title="Replay assembly">Rebuild ↻</button>
+</div>
+
+<div class="cue" aria-hidden="true"><i></i>Scroll</div>
+
+<noscript>
+  <style>canvas#scene,#hud{display:none}</style>
+</noscript>
+
+<script type="module">
+import * as THREE from 'three';
+
+/* ════════════════════════════════════════════════════════════════════
+   Scene — an old building being wrapped in scaffolding.
+   The whole site model lives in buildSite(); swap it for your own
+   model later (e.g. buildEnObra() from modelo-edificio.js). The
+   assembly animation is driven purely by mesh-name prefixes and
+   understands both naming schemes:
+     base|placa · post|poste · deck|plataforma · diagonal
+     (anything else falls in the "fittings" bucket)
+   ════════════════════════════════════════════════════════════════════ */
+
+let renderer;
+try {
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+} catch (e) {
+  document.getElementById('hud').style.display = 'none';
+  throw e;
+}
+renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.domElement.id = 'scene';
+document.body.prepend(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.add(new THREE.HemisphereLight(0xffffff, 0xd8d2c4, 1.0));
+
+const key = new THREE.DirectionalLight(0xffffff, 2.2);
+key.position.set(20, 34, 26);
+key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+key.shadow.bias = -0.0002;
+const span = 26;
+key.shadow.camera.left = -span; key.shadow.camera.right = span;
+key.shadow.camera.top = span; key.shadow.camera.bottom = -span;
+key.shadow.camera.far = 120;
+scene.add(key);
+
+const fillL = new THREE.DirectionalLight(0xfff4e6, 0.5);
+fillL.position.set(-25, 15, -20);
+scene.add(fillL);
+
+const ground = new THREE.Mesh(
+  new THREE.PlaneGeometry(400, 400),
+  new THREE.ShadowMaterial({ opacity: 0.18 })
+);
+ground.rotation.x = -Math.PI / 2;
+ground.receiveShadow = true;
+scene.add(ground);
+
+/* ── materials ─────────────────────────────────── */
+const M = {
+  wall:  new THREE.MeshStandardMaterial({ color: 0xc9b189, roughness: .95 }),
+  trim:  new THREE.MeshStandardMaterial({ color: 0xb49d73, roughness: .9 }),
+  glass: new THREE.MeshStandardMaterial({ color: 0x5a5343, roughness: .6 }),
+  steel: new THREE.MeshStandardMaterial({ color: 0xa7b0b8, roughness: .5, metalness: .4 }),
+  steelDark: new THREE.MeshStandardMaterial({ color: 0x7d858c, roughness: .55, metalness: .4 }),
+  wood:  new THREE.MeshStandardMaterial({ color: 0x9c7a4e, roughness: .85 }),
+  cone:  new THREE.MeshStandardMaterial({ color: 0xd95318, roughness: .6 }),
+};
+
+/* ── helpers ───────────────────────────────────── */
+const V3 = THREE.Vector3;
+function box(parent, w, h, d, mat, x, y, z, name) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+  m.position.set(x, y, z); m.name = name || '';
+  parent.add(m); return m;
+}
+function strut(parent, a, b, r, mat, name) {
+  const dir = new V3().subVectors(b, a);
+  const len = dir.length();
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 10), mat);
+  m.position.copy(a).addScaledVector(dir, .5);
+  m.quaternion.setFromUnitVectors(new V3(0, 1, 0), dir.normalize());
+  m.name = name || '';
+  parent.add(m); return m;
+}
+
+/* ── the model ─────────────────────────────────── */
+function buildSite() {
+  const g = new THREE.Group();
+  let id = 0;
+  const nm = p => `${p}_${id++}`;
+
+  /* old building — one static group, excluded from the drop */
+  const b = new THREE.Group();
+  b.name = 'edificio_viejo';
+  box(b, 10, 16.3, 9, M.wall, 0, 8.15, 0);                 // main volume
+  box(b, 10.5, 1.15, 9.5, M.trim, 0, .57, 0);              // plinth
+  box(b, 10.8, .5, 9.8, M.trim, 0, 16.1, 0);               // cornice
+  box(b, 2.6, 1.4, 2.2, M.wall, 2.4, 17.0, .8);            // stair bulkhead
+  box(b, 1.7, 2.7, .14, M.glass, 0, 1.35, 4.52);           // door
+  const rowsY = [3.6, 6.2, 8.8, 11.4, 14.0];
+  for (const cx of [-3.2, 0, 3.2]) for (const ry of rowsY) {
+    if (cx === 0 && ry === rowsY[0]) continue;             // door bay
+    box(b, 1.5, 1.95, .12, M.glass, cx, ry, 4.52);
+    box(b, 1.74, .14, .3, M.trim, cx, ry - 1.1, 4.58);
+  }
+  for (const cz of [-2.2, 1.4]) for (const ry of rowsY) {  // side windows
+    box(b, .12, 1.95, 1.5, M.glass, 5.02, ry, cz);
+    box(b, .3, .14, 1.74, M.trim, 5.08, ry - 1.1, cz);
+  }
+  g.add(b);
+
+  /* scaffold — every mesh a direct child of g so it can drop in */
+  const XS = [-5.6, -2.8, 0, 2.8, 5.6];    // frame positions
+  const ZI = 5.05, ZO = 6.25;              // inner / outer standard rows
+  const DECKS = [2.2, 4.8, 7.4, 10.0, 12.6, 15.2];
+  const LEVELS = [0.45, ...DECKS];
+  const BAYS = [-4.2, -1.4, 1.4, 4.2];     // bay centres
+
+  for (const x of XS) for (const z of [ZI, ZO]) {
+    box(g, .46, .08, .46, M.steelDark, x, .04, z, nm('placa'));      // base plate
+    box(g, .12, .4, .12, M.steelDark, x, .28, z, nm('placa_jack'));  // screw jack
+    const p = box(g, 1, 1, 1, M.steel, x, 8.3, z, nm('poste'));      // standard
+    p.geometry = new THREE.CylinderGeometry(.07, .07, 16.3, 10);
+  }
+  for (const x of XS) for (const y of LEVELS)                        // transoms
+    strut(g, new V3(x, y, ZI - .14), new V3(x, y, ZO + .14), .045, M.steel, nm('transom'));
+  for (let i = 0; i < 4; i++) for (const y of LEVELS) for (const z of [ZI, ZO])
+    strut(g, new V3(XS[i], y, z), new V3(XS[i + 1], y, z), .045, M.steel, nm('ledger'));
+  for (let i = 0; i < 4; i++) for (const y of DECKS) for (const dy of [.55, 1.05])
+    strut(g, new V3(XS[i], y + dy, ZO), new V3(XS[i + 1], y + dy, ZO), .04, M.steel, nm('rail'));
+  for (const bx of BAYS) for (const y of DECKS) {
+    for (const pz of [5.25, 5.65, 6.05])                             // deck planks
+      box(g, 2.66, .055, .37, M.wood, bx, y + .09, pz, nm('plataforma'));
+    box(g, 2.66, .24, .045, M.wood, bx, y + .24, 6.04, nm('plataforma_toe'));
+  }
+  for (let k = 0; k < 6; k++) {                                      // diagonal braces
+    const bIdx = k % 4;
+    strut(g, new V3(XS[bIdx], LEVELS[k], ZO + .1), new V3(XS[bIdx + 1], LEVELS[k + 1], ZO + .1),
+      .045, M.steelDark, nm('diagonal'));
+  }
+
+  /* company banner zip-tied to the guardrails */
+  const banner = new THREE.Mesh(
+    new THREE.PlaneGeometry(5.5, 1.18),
+    new THREE.MeshBasicMaterial({ map: makeBannerTexture(), side: THREE.DoubleSide })
+  );
+  banner.position.set(0, 10.8, 6.32);
+  banner.name = nm('banner');
+  g.add(banner);
+
+  /* a couple of cones for scale */
+  const coneGeo = new THREE.ConeGeometry(.3, .68, 20);
+  for (const [cx, cz] of [[7.6, 7.2], [-7.0, 5.6]]) {
+    const c = new THREE.Mesh(coneGeo, M.cone);
+    c.position.set(cx, .34, cz); c.name = nm('cone');
+    g.add(c);
+  }
+  return g;
+}
+
+function makeBannerTexture() {
+  const c = document.createElement('canvas');
+  c.width = 1024; c.height = 220;
+  const x = c.getContext('2d');
+  const draw = () => {
+    x.fillStyle = '#d95318'; x.fillRect(0, 0, 1024, 220);
+    x.strokeStyle = 'rgba(255,255,255,.5)'; x.lineWidth = 5;
+    x.strokeRect(16, 16, 992, 188);
+    x.fillStyle = '#fff'; x.textBaseline = 'middle';
+    x.font = '96px "Archivo Black", Arial, sans-serif';
+    x.fillText('UPRIGHT', 46, 88);
+    x.font = '600 40px Archivo, Arial, sans-serif';
+    x.fillText('SCAFFOLDING · (555) 012-4477', 48, 168);
+    tex.needsUpdate = true;
+  };
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4;
+  draw();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
+  return tex;
+}
+
+const g = buildSite();
+g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+scene.add(g);
+
+/* ── assembly animation (from the loading screen) ── */
+const MAXY = 16.5;
+const isPiece = c => c.name !== 'edificio_viejo';
+const piezas = g.children.filter(isPiece).map(mesh => {
+  const y = mesh.position.y, yn = Math.min(y / MAXY, 1), j = Math.random(), n = mesh.name;
+  let delay;
+  if (/^(placa|base)/.test(n))            delay = j * .5;
+  else if (/^(poste|post)/.test(n))       delay = .25 + j * .85;
+  else if (/^(plataforma|deck)/.test(n))  delay = 1.6 + yn * 2.4 + j * .2;
+  else if (/^diagonal/.test(n))           delay = 3.9 + j * .7;
+  else                                    delay = 1.1 + yn * 2.6 + j * .25;
+  return { mesh, ty: y, delay, drop: 13 + j * 8 };
+});
+const DUR = .75;
+const BUILD_END = Math.max(...piezas.map(p => p.delay)) + DUR;
+
+const easeOut = p => 1 - Math.pow(1 - p, 3);
+const clamp01 = v => Math.max(0, Math.min(1, v));
+
+/* ── camera ────────────────────────────────────── */
+const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 400);
+let camDist = 34;
+function fit() {
+  renderer.setSize(innerWidth, innerHeight);
+  const aspect = innerWidth / innerHeight;
+  camera.aspect = aspect;
+  // dolly out until the site fits both vertically and horizontally
+  const tanV = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+  camDist = Math.max(11.5 / tanV, 8.5 / (tanV * aspect));
+  if (innerWidth > 940) {
+    // push the building toward the right half of the viewport
+    camera.setViewOffset(innerWidth, innerHeight, -innerWidth * .16, 0, innerWidth, innerHeight);
+  } else {
+    camera.clearViewOffset();
+  }
+  camera.updateProjectionMatrix();
+}
+fit(); addEventListener('resize', fit);
+
+/* pointer parallax (desktop only) */
+let mx = 0, my = 0, tmx = 0, tmy = 0;
+if (matchMedia('(pointer:fine)').matches) {
+  addEventListener('pointermove', e => {
+    tmx = (e.clientX / innerWidth) * 2 - 1;
+    tmy = (e.clientY / innerHeight) * 2 - 1;
+  });
+}
+
+/* ── HUD ───────────────────────────────────────── */
+const hud = document.getElementById('hud');
+const hudTxt = document.getElementById('hud-txt');
+const replayBtn = document.getElementById('replay');
+let lastHud = '';
+function setHud(msg, secure) {
+  if (msg !== lastHud) { hudTxt.textContent = msg; lastHud = msg; }
+  hud.classList.toggle('secure', !!secure);
+}
+
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let t = reduced ? BUILD_END + .1 : 0;
+if (reduced) replayBtn.style.display = 'none';
+
+replayBtn.addEventListener('click', () => { t = 0; });
+
+/* ── frame loop ────────────────────────────────── */
+const clock = new THREE.Clock();
+function frame(dt) {
+  t += dt;
+
+  if (t <= BUILD_END + .5) {
+    let ready = 0;
+    for (const p of piezas) {
+      const k = clamp01((t - p.delay) / DUR);
+      p.mesh.visible = t > p.delay;
+      p.mesh.position.y = p.ty + p.drop * (1 - easeOut(k));
+      if (k >= .55) ready++;
+    }
+    if (t >= BUILD_END) setHud('Scaffold secure · EN 12811', true);
+    else setHud('Assembling · ' + Math.round((ready / piezas.length) * 100) + '%', false);
+  }
+
+  mx += (tmx - mx) * .04;
+  my += (tmy - my) * .04;
+  const a = .5 + Math.sin(t * .07) * .04 + mx * .05;
+  camera.position.set(Math.sin(a) * camDist, camDist * .38 - my * 1.1, Math.cos(a) * camDist);
+  camera.lookAt(0, 7.9, 0);
+  renderer.render(scene, camera);
+}
+renderer.setAnimationLoop(() => frame(Math.min(clock.getDelta(), .05)));
+</script>
+</body>
+</html>
