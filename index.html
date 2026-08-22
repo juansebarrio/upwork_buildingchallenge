@@ -196,13 +196,15 @@
     align-items:center;justify-content:center;
   }
   html.intro-boot #intro{display:flex}
+  /* handoff: no flight, no rush — the wordmark dissolves in place with a
+     faint upward drift while the veil clears slowly over the still hero */
   #intro.intro-out{
-    opacity:0;transition:opacity 1s cubic-bezier(.4,.1,.3,1) .25s;pointer-events:none;
+    opacity:0;transition:opacity 1.5s cubic-bezier(.45,.05,.25,1) .1s;pointer-events:none;
   }
   #intro.intro-out .intro-stage{
-    transform:translate(var(--fx,-26vw),var(--fy,-30vh)) scale(.42);
+    transform:translateY(-5vh) scale(.94);
     opacity:0;
-    transition:transform 1.15s cubic-bezier(.5,.08,.18,1) .15s, opacity .85s ease .3s;
+    transition:transform 1.6s cubic-bezier(.3,.1,.2,1), opacity 1.05s ease .15s;
   }
   .intro-stage{position:relative;width:min(86vw,1080px);
     animation:introSettle .25s ease-out 2.45s}
@@ -255,9 +257,9 @@
      chrome eases back in while the veil is still clearing */
   html.intro-boot nav,html.intro-boot #hud,html.intro-boot .cue{opacity:0}
   html.intro-boot .rv{animation-play-state:paused}
-  nav{transition:opacity .7s ease .35s}
-  #hud{transition:opacity .7s ease .55s}
-  .cue{transition:opacity .7s ease .7s}
+  nav{transition:opacity .9s ease .55s}
+  #hud{transition:opacity .9s ease .8s}
+  .cue{transition:opacity .9s ease 1s}
   /* skipping jumps every layer to its finished state */
   html.intro-skip .rv{animation:none;opacity:1;transform:none}
   html.intro-skip .fb-p{animation-duration:.01s!important;animation-delay:0s!important}
@@ -297,9 +299,6 @@
     .cue{display:none}
     #replay{white-space:nowrap}
     .fb-wrap{left:50%;top:55%;width:min(78vw,400px)}
-    #intro.intro-out .intro-stage{
-      transform:translate(var(--fx,-18vw),var(--fy,-32vh)) scale(.5);
-    }
     #scrim{
       display:block;position:fixed;inset:0;z-index:5;pointer-events:none;
       background:linear-gradient(180deg,rgba(238,232,220,.95) 0%,rgba(238,232,220,.85) 42%,rgba(238,232,220,.5) 68%,rgba(238,232,220,.12) 100%);
@@ -494,12 +493,12 @@ if (!/[?&]intro=off/.test(location.search)) {
     var el = document.getElementById('intro');
     if (el) el.className += ' intro-out';
     window.__introDone = true;
-    /* let the veil start clearing before the scaffold starts to rain in —
-       the build reads as received, not switched on */
+    /* reveal first, build second: the veil clears over the still hero,
+       and only once it is nearly gone does the scaffold start to rain */
     setTimeout(function () {
       if (window.__heroKickoff) window.__heroKickoff();
-    }, 220);
-    setTimeout(hideIntro, 1600);
+    }, 850);
+    setTimeout(hideIntro, 1900);
   }
   function skip() {
     if (done) return;
@@ -543,7 +542,9 @@ if (!/[?&]intro=off/.test(location.search)) {
       for (var i = 0; i < skipTypes.length; i++) {
         window.addEventListener(skipTypes[i], onSkip, true);
       }
-      later(handoff, isReduced ? 1200 : 2750);
+      /* wait for the brace flash to finish plus a beat of rest — cutting
+         while something still moves is what reads as violent */
+      later(handoff, isReduced ? 1200 : 3100);
       later(function () { if (!done) handoff(); }, 4200);   // hard guard
     } catch (e) { fail(e); }
   }
