@@ -15,17 +15,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Archivo+Black&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://unpkg.com/three@0.184.0/build/three.module.js"
-  },
-  "integrity": {
-    "https://unpkg.com/three@0.184.0/build/three.module.js": "sha384-8FCZ1eVO6it4+pbec2aDtnTrwjWXZLJRC+MAGCIPDgsYnUrl/E0A2YlF8ioMKI/J",
-    "https://unpkg.com/three@0.184.0/build/three.core.js": "sha384-dw2ooPewaEIrAgl6oFDBmmBWCE9oW9LxRGcfwZ0hLvEprzo202wXl7vCYHRlSnOT"
-  }
-}
-</script>
+<!-- three.js is self-hosted (vendor/) so no client network policy can block it -->
+<link rel="modulepreload" href="vendor/three.module.js">
+<link rel="modulepreload" href="vendor/three.core.js">
 
 <style>
   :root{
@@ -44,7 +36,7 @@
     font-family:"Archivo",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
     color:var(--ink);
     background:radial-gradient(120% 90% at 72% 12%, #f5f0e5 0%, #ece6da 55%, #e2dbca 100%);
-    overflow:hidden auto;
+    overflow-x:hidden;overflow-y:auto;
   }
   .sr-only{
     position:absolute;width:1px;height:1px;padding:0;margin:-1px;
@@ -57,6 +49,7 @@
     position:fixed;top:0;left:0;right:0;z-index:30;
     display:flex;align-items:center;gap:36px;
     padding:22px clamp(20px,4vw,52px);
+    transition:opacity .4s;
   }
   .logo{display:flex;align-items:center;gap:10px;color:var(--ink);text-decoration:none}
   .logo svg{display:block}
@@ -152,6 +145,7 @@
     display:flex;align-items:center;gap:14px;
     font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:500;
     letter-spacing:.18em;text-transform:uppercase;color:var(--muted);
+    transition:opacity .4s;
   }
   #hud .dot{
     width:8px;height:8px;border-radius:50%;background:var(--accent-bright);
@@ -175,6 +169,7 @@
     display:flex;flex-direction:column;align-items:center;gap:8px;
     font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.3em;
     color:var(--muted);text-transform:uppercase;
+    transition:opacity .4s;
   }
   .cue i{
     width:1px;height:34px;background:var(--hair);position:relative;overflow:hidden;
@@ -190,6 +185,106 @@
     animation:rv .95s cubic-bezier(.2,.65,.2,1) forwards;animation-delay:var(--d,0s)}
   @keyframes rv{to{opacity:1;transform:none}}
 
+  /* ── intro: the brand builds itself ──────────── */
+  /* Variant B: letter blocks hoisted into place while a scaffold frame
+     draws itself behind. All final states are the BASE styles; the
+     animations only describe the way in (fill-mode backwards), so
+     killing animations (reduced / fail) lands on the finished frame. */
+  #intro{
+    display:none;position:fixed;inset:0;z-index:40;
+    background:radial-gradient(120% 90% at 72% 12%, #f5f0e5 0%, #ece6da 55%, #e2dbca 100%);
+    align-items:center;justify-content:center;
+  }
+  html.intro-boot #intro{display:flex}
+  #intro.intro-out{
+    opacity:0;transition:opacity 1s cubic-bezier(.4,.1,.3,1) .25s;pointer-events:none;
+  }
+  #intro.intro-out .intro-stage{
+    transform:translate(var(--fx,-26vw),var(--fy,-30vh)) scale(.42);
+    opacity:0;
+    transition:transform 1.15s cubic-bezier(.5,.08,.18,1) .15s, opacity .85s ease .3s;
+  }
+  .intro-stage{position:relative;width:min(86vw,1080px);
+    animation:introSettle .25s ease-out 2.45s}
+  .intro-frame{position:absolute;left:-3%;bottom:-6px;width:106%;height:auto;z-index:0}
+  .intro-word{
+    position:relative;z-index:1;display:flex;justify-content:center;
+    overflow:hidden;padding-top:.1em;
+    font-family:"Archivo Black",Archivo,Arial,sans-serif;
+    font-size:clamp(56px,10.5vw,148px);line-height:1;color:var(--ink);
+  }
+  .intro-word span{display:inline-block;margin:0 .015em;
+    animation:ilHoist .55s cubic-bezier(.2,.7,.3,1) backwards}
+  .intro-word span:nth-child(1){animation-delay:.30s}
+  .intro-word span:nth-child(2){animation-delay:.42s}
+  .intro-word span:nth-child(3){animation-delay:.54s}
+  .intro-word span:nth-child(4){animation-delay:.66s}
+  .intro-word span:nth-child(5){animation-delay:.78s}
+  .intro-word span:nth-child(6){animation-delay:.90s}
+  .intro-word span:nth-child(7){animation-delay:1.02s}
+  .intro-ground{position:absolute;left:-5%;right:-5%;bottom:-8px;height:2px;
+    background:var(--hair)}
+  @keyframes ilHoist{
+    0%{transform:translateY(112%)}
+    70%{transform:translateY(-3%)}
+    85%{transform:translateY(1.5%)}
+    100%{transform:translateY(0)}
+  }
+  @keyframes introSettle{0%,100%{transform:none}55%{transform:translateY(5px)}}
+  .ifv,.ifh,.ifj,.ifd{animation-fill-mode:backwards}
+  .ifv{transform-box:fill-box;transform-origin:bottom;
+    animation:tubeV .4s cubic-bezier(.2,.65,.3,1) both;animation-delay:var(--d,0s)}
+  .ifh{transform-box:fill-box;transform-origin:left;
+    animation:tubeH .45s cubic-bezier(.2,.65,.3,1) both;animation-delay:var(--d,0s)}
+  .ifj{animation:jpop .25s ease-out both;animation-delay:var(--d,0s)}
+  .ifd{stroke-dasharray:1;stroke-dashoffset:0;
+    animation:ifdDraw .3s ease-out both, ifdFlash .5s ease-in-out 2.45s;
+    animation-delay:var(--d,0s),2.45s}
+  @keyframes tubeV{from{transform:scaleY(0)}}
+  @keyframes tubeH{from{transform:scaleX(0)}}
+  @keyframes jpop{from{opacity:0}}
+  @keyframes ifdDraw{from{stroke-dashoffset:1}}
+  @keyframes ifdFlash{0%,100%{stroke:#7d858c}40%{stroke:#d95318}}
+  @keyframes introStageFade{from{opacity:0}}
+  #intro.intro-reduced *{animation:none!important}
+  #intro.intro-reduced .intro-stage{animation:introStageFade .35s ease-out both!important}
+  #intro.intro-fail *{animation:none!important}
+  #intro.intro-fail .intro-frame,#intro.intro-fail .intro-ground{display:none}
+  #intro.intro-fail .intro-word{animation:introStageFade .6s ease-out both!important}
+  /* while the intro runs, the hero waits underneath; on handoff the
+     chrome eases back in while the veil is still clearing */
+  html.intro-boot nav,html.intro-boot #hud,html.intro-boot .cue{opacity:0}
+  html.intro-boot .rv{animation-play-state:paused}
+  nav{transition:opacity .7s ease .35s}
+  #hud{transition:opacity .7s ease .55s}
+  .cue{transition:opacity .7s ease .7s}
+  /* skipping jumps every layer to its finished state */
+  html.intro-skip .rv{animation:none;opacity:1;transform:none}
+  html.intro-skip .fb-p{animation-duration:.01s!important;animation-delay:0s!important}
+
+  /* ── fallback hero (no-WebGL / error path) ───── */
+  #fallback-hero{display:none;position:fixed;inset:0;z-index:0;pointer-events:none}
+  body.hero-fallback #fallback-hero{display:block}
+  body.hero-fallback #replay{display:none}
+  .fb-wrap{
+    position:absolute;top:53%;left:70%;transform:translate(-50%,-50%);
+    width:min(36vw,440px);
+  }
+  .fb-wrap svg{width:100%;height:auto;display:block}
+  .fb-p{opacity:0;transform:translateY(-46px);
+    animation:fbDrop .55s cubic-bezier(.2,.65,.25,1) forwards;
+    animation-delay:var(--d,0s)}
+  @keyframes fbDrop{to{opacity:1;transform:none}}
+
+  /* TEMP debug badge — remove after the client confirms what he sees */
+  #hero-debug{
+    display:none;position:fixed;left:6px;bottom:6px;z-index:99;
+    font:9px/1 "IBM Plex Mono",monospace;letter-spacing:.06em;color:#8a8273;
+    background:rgba(255,255,255,.6);padding:3px 6px;border-radius:4px;
+    pointer-events:none;
+  }
+  #hero-debug.on{display:block}
+
   /* ── mobile ──────────────────────────────────── */
   #scrim{display:none}
   @media (max-width:940px){
@@ -201,6 +296,10 @@
     .stat span{font-size:22px}
     .cue{display:none}
     #replay{white-space:nowrap}
+    .fb-wrap{left:50%;top:55%;width:min(78vw,400px)}
+    #intro.intro-out .intro-stage{
+      transform:translate(var(--fx,-18vw),var(--fy,-32vh)) scale(.5);
+    }
     #scrim{
       display:block;position:fixed;inset:0;z-index:5;pointer-events:none;
       background:linear-gradient(180deg,rgba(238,232,220,.95) 0%,rgba(238,232,220,.85) 42%,rgba(238,232,220,.5) 68%,rgba(238,232,220,.12) 100%);
@@ -214,10 +313,89 @@
     .rv{animation:none;opacity:1;transform:none}
     .cue i::after{animation:none}
     #hud .dot{animation:none}
+    /* fallback hero: shorter, softer settle instead of the full drop */
+    .fb-p{transform:translateY(-10px);animation-duration:.4s}
   }
 </style>
 </head>
 <body>
+
+<script>
+/* Gate: mark the document as "intro running" before first paint so the
+   hero underneath holds its first frame. ?intro=off disables the intro. */
+if (!/[?&]intro=off/.test(location.search)) {
+  document.documentElement.className += ' intro-boot';
+}
+</script>
+
+<script>
+/* Hero boot guard (plain ES5 so it parses everywhere): mode registry,
+   error boundary and load watchdog. If the 3D module fails for ANY
+   reason — script error, missing file, no WebGL, 10s without booting —
+   the animated SVG fallback takes over instead of a dead static page.
+   The debug badge composes both layers: "hero: <mode> · <intro mode>". */
+(function () {
+  var heroReason = '';
+  function paintBadge() {
+    var b = document.getElementById('hero-debug');
+    if (!b) return;
+    var s = 'hero: ' + (window.__heroMode || 'pending');
+    if (heroReason) s += ' (' + heroReason + ')';
+    if (window.__introMode) s += ' · ' + window.__introMode;
+    b.textContent = s;
+    b.className = 'on';
+  }
+  window.__heroMode = 'pending';
+  window.__setHeroMode = function (mode, reason) {
+    window.__heroMode = mode;
+    heroReason = reason || '';
+    document.documentElement.setAttribute('data-hero-mode', mode);
+    paintBadge();
+  };
+  window.__setIntroMode = function (mode) {
+    window.__introMode = mode;
+    document.documentElement.setAttribute('data-intro-mode', mode);
+    paintBadge();
+  };
+  window.__heroFallback = function (mode, reason, force) {
+    if (!force && window.__heroMode !== 'pending') return;
+    document.body.className += ' hero-fallback';
+    var cv = document.getElementById('scene');
+    if (cv && cv.parentNode) cv.parentNode.removeChild(cv);
+    setTimeout(function () {
+      if (!/hero-fallback/.test(document.body.className)) return;
+      var hud = document.getElementById('hud');
+      var txt = document.getElementById('hud-txt');
+      if (hud) hud.className = 'secure';
+      if (txt) txt.textContent = 'Scaffold secure';
+    }, 2000);
+    window.__setHeroMode(mode, reason);
+  };
+  window.addEventListener('error', function (e) {
+    if (window.__heroMode === 'pending' && (e.error || e.message)) {
+      window.__heroFallback('error', 'js-error');
+    }
+  });
+  window.addEventListener('unhandledrejection', function () {
+    if (window.__heroMode === 'pending') window.__heroFallback('error', 'promise-rejection');
+  });
+  setTimeout(function () {
+    if (window.__heroMode === 'pending') window.__heroFallback('error', 'load-timeout');
+  }, 10000);
+  /* independent guard: the intro overlay may never trap the page. If the
+     intro controller dies, clear the overlay and let the hero run. */
+  setTimeout(function () {
+    var h = document.documentElement;
+    if (h.className.indexOf('intro-boot') >= 0 && !window.__introDone) {
+      h.className = h.className.replace(' intro-boot', '');
+      var el = document.getElementById('intro');
+      if (el) el.style.display = 'none';
+      window.__introDone = true;
+      if (window.__heroKickoff) window.__heroKickoff();
+    }
+  }, 5000);
+})();
+</script>
 
 <nav>
   <a class="logo" href="#">
@@ -235,6 +413,215 @@
   </div>
   <a class="nav-phone" href="tel:+15550124477">(555) 012-4477</a>
 </nav>
+
+<!-- entry sequence: scaffolding erects the brand name, then hands off -->
+<div id="intro" aria-hidden="true">
+  <div class="intro-stage">
+    <svg class="intro-frame" viewBox="0 0 1000 330" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <!-- verticals first -->
+      <rect class="ifv" style="--d:.50s" x="27.5"  y="24" width="5" height="302" fill="#a7b0b8"/>
+      <rect class="ifv" style="--d:.56s" x="145.5" y="24" width="5" height="302" fill="#a7b0b8"/>
+      <rect class="ifv" style="--d:.62s" x="263.5" y="24" width="5" height="302" fill="#a7b0b8"/>
+      <rect class="ifv" style="--d:.68s" x="381.5" y="24" width="5" height="302" fill="#a7b0b8"/>
+      <rect class="ifv" style="--d:.74s" x="499.5" y="24" width="5" height="302" fill="#a7b0b8"/>
+      <rect class="ifv" style="--d:.80s" x="617.5" y="24" width="5" height="302" fill="#a7b0b8"/>
+      <rect class="ifv" style="--d:.86s" x="735.5" y="24" width="5" height="302" fill="#a7b0b8"/>
+      <rect class="ifv" style="--d:.92s" x="853.5" y="24" width="5" height="302" fill="#a7b0b8"/>
+      <rect class="ifv" style="--d:.98s" x="971.5" y="24" width="5" height="302" fill="#a7b0b8"/>
+      <!-- then horizontals -->
+      <rect class="ifh" style="--d:1.25s" x="30" y="21.5"  width="944" height="5" fill="#a7b0b8"/>
+      <rect class="ifh" style="--d:1.40s" x="30" y="187.5" width="944" height="5" fill="#a7b0b8"/>
+      <!-- joints lock on -->
+      <rect class="ifj" style="--d:1.45s" x="26" y="20"  width="8" height="8" fill="#7d858c"/>
+      <rect class="ifj" style="--d:1.48s" x="262" y="20" width="8" height="8" fill="#7d858c"/>
+      <rect class="ifj" style="--d:1.51s" x="498" y="20" width="8" height="8" fill="#7d858c"/>
+      <rect class="ifj" style="--d:1.54s" x="734" y="20" width="8" height="8" fill="#7d858c"/>
+      <rect class="ifj" style="--d:1.57s" x="970" y="20" width="8" height="8" fill="#7d858c"/>
+      <rect class="ifj" style="--d:1.60s" x="26" y="186"  width="8" height="8" fill="#7d858c"/>
+      <rect class="ifj" style="--d:1.63s" x="380" y="186" width="8" height="8" fill="#7d858c"/>
+      <rect class="ifj" style="--d:1.66s" x="616" y="186" width="8" height="8" fill="#7d858c"/>
+      <rect class="ifj" style="--d:1.69s" x="970" y="186" width="8" height="8" fill="#7d858c"/>
+      <!-- diagonals last -->
+      <line class="ifd" style="--d:1.80s" pathLength="1" x1="30"  y1="190" x2="148" y2="24"  stroke="#7d858c" stroke-width="5"/>
+      <line class="ifd" style="--d:1.95s" pathLength="1" x1="148" y1="24"  x2="266" y2="190" stroke="#7d858c" stroke-width="5"/>
+      <line class="ifd" style="--d:2.05s" pathLength="1" x1="738" y1="190" x2="856" y2="24"  stroke="#7d858c" stroke-width="5"/>
+      <line class="ifd" style="--d:2.15s" pathLength="1" x1="856" y1="24"  x2="974" y2="190" stroke="#7d858c" stroke-width="5"/>
+    </svg>
+    <div class="intro-word" aria-hidden="true">
+      <span>U</span><span>P</span><span>R</span><span>I</span><span>G</span><span>H</span><span>T</span>
+    </div>
+    <div class="intro-ground"></div>
+  </div>
+</div>
+
+<script>
+/* Intro controller (ES5). Beats: 0.3s stillness → letters hoist left to
+   right → frame draws (verticals, horizontals, diagonals) → settle +
+   orange brace flash (2.45s) → handoff at 2.75s. Total ≈ 3.2s.
+   Any pointer / wheel / touch / key skips straight to the finished hero.
+   Reduced motion: the finished wordmark fades in, no construction.
+   Everything is inside the same error-boundary system as the hero. */
+(function () {
+  if (/[?&]intro=off/.test(location.search)) return;
+  var q = /[?&]intro=(reduced|lite)/.exec(location.search);
+  var forced = q && q[1];
+  var html = document.documentElement;
+  var done = false, timers = [], skipTypes = ['pointerdown', 'touchstart', 'wheel', 'keydown'];
+
+  function reduced() {
+    if (forced) return forced === 'reduced';
+    try { return matchMedia('(prefers-reduced-motion: reduce)').matches; }
+    catch (e) { return false; }
+  }
+  function later(fn, ms) { timers.push(setTimeout(fn, ms)); }
+  function cleanup() {
+    for (var i = 0; i < timers.length; i++) clearTimeout(timers[i]);
+    timers = [];
+    for (var j = 0; j < skipTypes.length; j++) {
+      window.removeEventListener(skipTypes[j], onSkip, true);
+    }
+  }
+  function clearBoot() { html.className = html.className.replace(' intro-boot', ''); }
+  function hideIntro() {
+    var el = document.getElementById('intro');
+    if (el) el.style.display = 'none';
+  }
+  function handoff() {
+    if (done) return;
+    done = true;
+    cleanup();
+    clearBoot();
+    var el = document.getElementById('intro');
+    if (el) el.className += ' intro-out';
+    window.__introDone = true;
+    /* let the veil start clearing before the scaffold starts to rain in —
+       the build reads as received, not switched on */
+    setTimeout(function () {
+      if (window.__heroKickoff) window.__heroKickoff();
+    }, 220);
+    setTimeout(hideIntro, 1600);
+  }
+  function skip() {
+    if (done) return;
+    done = true;
+    cleanup();
+    clearBoot();
+    if (html.className.indexOf('intro-skip') < 0) html.className += ' intro-skip';
+    hideIntro();
+    window.__introDone = true;
+    if (window.__heroFinish) window.__heroFinish();
+    else window.__heroFinishPending = true;
+  }
+  function onSkip() { skip(); }
+  function fail(err) {
+    if (window.console && console.error) console.error('[intro]', err);
+    if (window.__setIntroMode) window.__setIntroMode('intro-fallback');
+    var el = document.getElementById('intro');
+    if (el && el.className.indexOf('intro-fail') < 0) el.className += ' intro-fail';
+    window.__introDone = true;                 // hero appears immediately
+    if (window.__heroKickoff) window.__heroKickoff();
+    setTimeout(function () {
+      if (done) return;
+      done = true;
+      cleanup();
+      clearBoot();
+      hideIntro();
+    }, 700);
+  }
+  function run() {
+    try {
+      window.__introDone = false;
+      done = false;
+      var isReduced = reduced();
+      var el = document.getElementById('intro');
+      if (isReduced && el && el.className.indexOf('intro-reduced') < 0) {
+        el.className += ' intro-reduced';
+      }
+      if (window.__setIntroMode) {
+        window.__setIntroMode(isReduced ? 'intro-reduced' : 'intro-lite');
+      }
+      for (var i = 0; i < skipTypes.length; i++) {
+        window.addEventListener(skipTypes[i], onSkip, true);
+      }
+      later(handoff, isReduced ? 1200 : 2750);
+      later(function () { if (!done) handoff(); }, 4200);   // hard guard
+    } catch (e) { fail(e); }
+  }
+  /* bfcache restore counts as a page load: replay the whole sequence.
+     Cloning the node restarts its CSS animations from zero. */
+  window.addEventListener('pageshow', function (e) {
+    if (!e.persisted) return;
+    try {
+      var el = document.getElementById('intro');
+      if (!el || !el.parentNode) return;
+      var n = el.cloneNode(true);
+      n.className = '';
+      n.style.display = '';
+      el.parentNode.replaceChild(n, el);
+      html.className = html.className.replace(' intro-skip', '');
+      if (html.className.indexOf('intro-boot') < 0) html.className += ' intro-boot';
+      run();
+    } catch (err) { fail(err); }
+  });
+  run();
+})();
+</script>
+
+<!-- lightweight animated fallback: shown when WebGL/init fails or JS is off -->
+<div id="fallback-hero" aria-hidden="true">
+  <div class="fb-wrap">
+    <svg viewBox="0 0 380 540" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <g id="fbwin">
+          <rect width="44" height="54" fill="#5a5343"/>
+          <rect x="-4" y="56" width="52" height="5" fill="#b49d73"/>
+        </g>
+      </defs>
+      <ellipse cx="190" cy="504" rx="170" ry="10" fill="rgba(33,28,19,.12)"/>
+      <!-- building (static, like the 3D version) -->
+      <g>
+        <rect x="200" y="30" width="56" height="26" fill="#c9b189"/>
+        <rect x="80" y="64" width="220" height="430" fill="#c9b189"/>
+        <rect x="70" y="52" width="240" height="14" fill="#b49d73"/>
+        <rect x="74" y="474" width="232" height="20" fill="#b49d73"/>
+        <use href="#fbwin" x="104" y="92"/><use href="#fbwin" x="166" y="92"/><use href="#fbwin" x="228" y="92"/>
+        <use href="#fbwin" x="104" y="164"/><use href="#fbwin" x="166" y="164"/><use href="#fbwin" x="228" y="164"/>
+        <use href="#fbwin" x="104" y="236"/><use href="#fbwin" x="166" y="236"/><use href="#fbwin" x="228" y="236"/>
+        <use href="#fbwin" x="104" y="308"/><use href="#fbwin" x="166" y="308"/><use href="#fbwin" x="228" y="308"/>
+        <use href="#fbwin" x="104" y="380"/><use href="#fbwin" x="228" y="380"/>
+        <rect x="168" y="414" width="44" height="80" fill="#5a5343"/>
+      </g>
+      <!-- scaffold pieces drop in with staggered CSS delays -->
+      <rect class="fb-p" style="--d:.08s" x="70"  y="16" width="5" height="478" fill="#a7b0b8"/>
+      <rect class="fb-p" style="--d:.14s" x="123" y="16" width="5" height="478" fill="#a7b0b8"/>
+      <rect class="fb-p" style="--d:.20s" x="176" y="16" width="5" height="478" fill="#a7b0b8"/>
+      <rect class="fb-p" style="--d:.26s" x="229" y="16" width="5" height="478" fill="#a7b0b8"/>
+      <rect class="fb-p" style="--d:.32s" x="282" y="16" width="5" height="478" fill="#a7b0b8"/>
+      <rect class="fb-p" style="--d:.40s" x="62" y="34"  width="234" height="4.5" fill="#a7b0b8"/>
+      <rect class="fb-p" style="--d:.44s" x="62" y="106" width="234" height="4.5" fill="#a7b0b8"/>
+      <rect class="fb-p" style="--d:.48s" x="62" y="178" width="234" height="4.5" fill="#a7b0b8"/>
+      <rect class="fb-p" style="--d:.52s" x="62" y="250" width="234" height="4.5" fill="#a7b0b8"/>
+      <rect class="fb-p" style="--d:.56s" x="62" y="322" width="234" height="4.5" fill="#a7b0b8"/>
+      <rect class="fb-p" style="--d:.60s" x="62" y="394" width="234" height="4.5" fill="#a7b0b8"/>
+      <rect class="fb-p" style="--d:.64s" x="62" y="466" width="234" height="4.5" fill="#a7b0b8"/>
+      <rect class="fb-p" style="--d:.72s" x="66" y="99"  width="226" height="7" fill="#9c7a4e"/>
+      <rect class="fb-p" style="--d:.76s" x="66" y="171" width="226" height="7" fill="#9c7a4e"/>
+      <rect class="fb-p" style="--d:.80s" x="66" y="243" width="226" height="7" fill="#9c7a4e"/>
+      <rect class="fb-p" style="--d:.84s" x="66" y="315" width="226" height="7" fill="#9c7a4e"/>
+      <rect class="fb-p" style="--d:.88s" x="66" y="387" width="226" height="7" fill="#9c7a4e"/>
+      <rect class="fb-p" style="--d:.92s" x="66" y="459" width="226" height="7" fill="#9c7a4e"/>
+      <line class="fb-p" style="--d:1.05s" x1="74" y1="470" x2="180" y2="398" stroke="#7d858c" stroke-width="4"/>
+      <line class="fb-p" style="--d:1.12s" x1="180" y1="398" x2="286" y2="326" stroke="#7d858c" stroke-width="4"/>
+      <g class="fb-p" style="--d:1.2s">
+        <rect x="96" y="288" width="170" height="38" rx="2" fill="#d95318"/>
+        <text x="112" y="315" fill="#fff" font-family="'Archivo Black',Archivo,Arial,sans-serif"
+              font-size="22" letter-spacing="2">UPRIGHT</text>
+      </g>
+      <path class="fb-p" style="--d:1.3s" d="M46 494 L56 470 L66 494 Z" fill="#d95318"/>
+      <path class="fb-p" style="--d:1.34s" d="M314 494 L324 470 L334 494 Z" fill="#d95318"/>
+    </svg>
+  </div>
+</div>
 
 <div id="scrim"></div>
 
@@ -277,13 +664,14 @@
 
 <div class="cue" aria-hidden="true"><i></i>Scroll</div>
 
+<!-- TEMP: reports which modes rendered (hero + intro) -->
+<div id="hero-debug" aria-hidden="true"></div>
+
 <noscript>
-  <style>canvas#scene,#hud{display:none}</style>
+  <style>#hud,#hero-debug,#intro{display:none!important}#fallback-hero{display:block}</style>
 </noscript>
 
 <script type="module">
-import * as THREE from 'three';
-
 /* ════════════════════════════════════════════════════════════════════
    Scene — an old building being wrapped in scaffolding.
    The whole site model lives in buildSite(); swap it for your own
@@ -292,287 +680,401 @@ import * as THREE from 'three';
    understands both naming schemes:
      base|placa · post|poste · deck|plataforma · diagonal
      (anything else falls in the "fittings" bucket)
+
+   Debug overrides for testing:
+     ?hero=fallback | ?hero=reduced | ?hero=3d
+     ?intro=off | ?intro=reduced | ?intro=lite
    ════════════════════════════════════════════════════════════════════ */
 
-let renderer;
-try {
-  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-} catch (e) {
-  document.getElementById('hud').style.display = 'none';
-  throw e;
-}
-renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.domElement.id = 'scene';
-document.body.prepend(renderer.domElement);
+let THREE;
 
-const scene = new THREE.Scene();
-scene.add(new THREE.HemisphereLight(0xffffff, 0xd8d2c4, 1.0));
+const HERO_OVERRIDE = new URLSearchParams(location.search).get('hero');
 
-const key = new THREE.DirectionalLight(0xffffff, 2.2);
-key.position.set(20, 34, 26);
-key.castShadow = true;
-key.shadow.mapSize.set(2048, 2048);
-key.shadow.bias = -0.0002;
-const span = 26;
-key.shadow.camera.left = -span; key.shadow.camera.right = span;
-key.shadow.camera.top = span; key.shadow.camera.bottom = -span;
-key.shadow.camera.far = 120;
-scene.add(key);
-
-const fillL = new THREE.DirectionalLight(0xfff4e6, 0.5);
-fillL.position.set(-25, 15, -20);
-scene.add(fillL);
-
-const ground = new THREE.Mesh(
-  new THREE.PlaneGeometry(400, 400),
-  new THREE.ShadowMaterial({ opacity: 0.18 })
-);
-ground.rotation.x = -Math.PI / 2;
-ground.receiveShadow = true;
-scene.add(ground);
-
-/* ── materials ─────────────────────────────────── */
-const M = {
-  wall:  new THREE.MeshStandardMaterial({ color: 0xc9b189, roughness: .95 }),
-  trim:  new THREE.MeshStandardMaterial({ color: 0xb49d73, roughness: .9 }),
-  glass: new THREE.MeshStandardMaterial({ color: 0x5a5343, roughness: .6 }),
-  steel: new THREE.MeshStandardMaterial({ color: 0xa7b0b8, roughness: .5, metalness: .4 }),
-  steelDark: new THREE.MeshStandardMaterial({ color: 0x7d858c, roughness: .55, metalness: .4 }),
-  wood:  new THREE.MeshStandardMaterial({ color: 0x9c7a4e, roughness: .85 }),
-  cone:  new THREE.MeshStandardMaterial({ color: 0xd95318, roughness: .6 }),
-};
-
-/* ── helpers ───────────────────────────────────── */
-const V3 = THREE.Vector3;
-function box(parent, w, h, d, mat, x, y, z, name) {
-  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
-  m.position.set(x, y, z); m.name = name || '';
-  parent.add(m); return m;
-}
-function strut(parent, a, b, r, mat, name) {
-  const dir = new V3().subVectors(b, a);
-  const len = dir.length();
-  const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 10), mat);
-  m.position.copy(a).addScaledVector(dir, .5);
-  m.quaternion.setFromUnitVectors(new V3(0, 1, 0), dir.normalize());
-  m.name = name || '';
-  parent.add(m); return m;
+function webglAvailable() {
+  try {
+    const c = document.createElement('canvas');
+    return !!(window.WebGLRenderingContext &&
+      (c.getContext('webgl2') || c.getContext('webgl') || c.getContext('experimental-webgl')));
+  } catch (e) { return false; }
 }
 
-/* ── the model ─────────────────────────────────── */
-function buildSite() {
-  const g = new THREE.Group();
-  let id = 0;
-  const nm = p => `${p}_${id++}`;
-
-  /* old building — one static group, excluded from the drop */
-  const b = new THREE.Group();
-  b.name = 'edificio_viejo';
-  box(b, 10, 16.3, 9, M.wall, 0, 8.15, 0);                 // main volume
-  box(b, 10.5, 1.15, 9.5, M.trim, 0, .57, 0);              // plinth
-  box(b, 10.8, .5, 9.8, M.trim, 0, 16.1, 0);               // cornice
-  box(b, 2.6, 1.4, 2.2, M.wall, 2.4, 17.0, .8);            // stair bulkhead
-  box(b, 1.7, 2.7, .14, M.glass, 0, 1.35, 4.52);           // door
-  const rowsY = [3.6, 6.2, 8.8, 11.4, 14.0];
-  for (const cx of [-3.2, 0, 3.2]) for (const ry of rowsY) {
-    if (cx === 0 && ry === rowsY[0]) continue;             // door bay
-    box(b, 1.5, 1.95, .12, M.glass, cx, ry, 4.52);
-    box(b, 1.74, .14, .3, M.trim, cx, ry - 1.1, 4.58);
-  }
-  for (const cz of [-2.2, 1.4]) for (const ry of rowsY) {  // side windows
-    box(b, .12, 1.95, 1.5, M.glass, 5.02, ry, cz);
-    box(b, .3, .14, 1.74, M.trim, 5.08, ry - 1.1, cz);
-  }
-  g.add(b);
-
-  /* scaffold — every mesh a direct child of g so it can drop in */
-  const XS = [-5.6, -2.8, 0, 2.8, 5.6];    // frame positions
-  const ZI = 5.05, ZO = 6.25;              // inner / outer standard rows
-  const DECKS = [2.2, 4.8, 7.4, 10.0, 12.6, 15.2];
-  const LEVELS = [0.45, ...DECKS];
-  const BAYS = [-4.2, -1.4, 1.4, 4.2];     // bay centres
-
-  for (const x of XS) for (const z of [ZI, ZO]) {
-    box(g, .46, .08, .46, M.steelDark, x, .04, z, nm('placa'));      // base plate
-    box(g, .12, .4, .12, M.steelDark, x, .28, z, nm('placa_jack'));  // screw jack
-    const p = box(g, 1, 1, 1, M.steel, x, 8.3, z, nm('poste'));      // standard
-    p.geometry = new THREE.CylinderGeometry(.07, .07, 16.3, 10);
-  }
-  for (const x of XS) for (const y of LEVELS)                        // transoms
-    strut(g, new V3(x, y, ZI - .14), new V3(x, y, ZO + .14), .045, M.steel, nm('transom'));
-  for (let i = 0; i < 4; i++) for (const y of LEVELS) for (const z of [ZI, ZO])
-    strut(g, new V3(XS[i], y, z), new V3(XS[i + 1], y, z), .045, M.steel, nm('ledger'));
-  for (let i = 0; i < 4; i++) for (const y of DECKS) for (const dy of [.55, 1.05])
-    strut(g, new V3(XS[i], y + dy, ZO), new V3(XS[i + 1], y + dy, ZO), .04, M.steel, nm('rail'));
-  for (const bx of BAYS) for (const y of DECKS) {
-    for (const pz of [5.25, 5.65, 6.05])                             // deck planks
-      box(g, 2.66, .055, .37, M.wood, bx, y + .09, pz, nm('plataforma'));
-    box(g, 2.66, .24, .045, M.wood, bx, y + .24, 6.04, nm('plataforma_toe'));
-  }
-  for (let k = 0; k < 6; k++) {                                      // diagonal braces
-    const bIdx = k % 4;
-    strut(g, new V3(XS[bIdx], LEVELS[k], ZO + .1), new V3(XS[bIdx + 1], LEVELS[k + 1], ZO + .1),
-      .045, M.steelDark, nm('diagonal'));
-  }
-
-  /* company banner zip-tied to the guardrails */
-  const banner = new THREE.Mesh(
-    new THREE.PlaneGeometry(5.5, 1.18),
-    new THREE.MeshBasicMaterial({ map: makeBannerTexture(), side: THREE.DoubleSide })
-  );
-  banner.position.set(0, 10.8, 6.32);
-  banner.name = nm('banner');
-  g.add(banner);
-
-  /* a couple of cones for scale */
-  const coneGeo = new THREE.ConeGeometry(.3, .68, 20);
-  for (const [cx, cz] of [[7.6, 7.2], [-7.0, 5.6]]) {
-    const c = new THREE.Mesh(coneGeo, M.cone);
-    c.position.set(cx, .34, cz); c.name = nm('cone');
-    g.add(c);
-  }
-  return g;
+async function boot() {
+  if (HERO_OVERRIDE === 'fallback') { window.__heroFallback('fallback', 'forced'); return; }
+  if (!webglAvailable()) { window.__heroFallback('fallback', 'no-webgl'); return; }
+  THREE = await import('./vendor/three.module.js');
+  if (window.__heroMode !== 'pending') return;   // watchdog already switched to fallback
+  initHero();
 }
 
-function makeBannerTexture() {
-  const c = document.createElement('canvas');
-  c.width = 1024; c.height = 220;
-  const x = c.getContext('2d');
-  const draw = () => {
-    x.fillStyle = '#d95318'; x.fillRect(0, 0, 1024, 220);
-    x.strokeStyle = 'rgba(255,255,255,.5)'; x.lineWidth = 5;
-    x.strokeRect(16, 16, 992, 188);
-    x.fillStyle = '#fff'; x.textBaseline = 'middle';
-    x.font = '96px "Archivo Black", Arial, sans-serif';
-    x.fillText('UPRIGHT', 46, 88);
-    x.font = '600 40px Archivo, Arial, sans-serif';
-    x.fillText('SCAFFOLDING · (555) 012-4477', 48, 168);
-    tex.needsUpdate = true;
-  };
-  const tex = new THREE.CanvasTexture(c);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  tex.anisotropy = 4;
-  draw();
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
-  return tex;
-}
+function initHero() {
+  const IS_MOBILE = innerWidth <= 940;
 
-const g = buildSite();
-g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
-scene.add(g);
-
-/* ── assembly animation (from the loading screen) ── */
-const MAXY = 16.5;
-const isPiece = c => c.name !== 'edificio_viejo';
-const piezas = g.children.filter(isPiece).map(mesh => {
-  const y = mesh.position.y, yn = Math.min(y / MAXY, 1), j = Math.random(), n = mesh.name;
-  let delay;
-  if (/^(placa|base)/.test(n))            delay = j * .5;
-  else if (/^(poste|post)/.test(n))       delay = .25 + j * .85;
-  else if (/^(plataforma|deck)/.test(n))  delay = 1.6 + yn * 2.4 + j * .2;
-  else if (/^diagonal/.test(n))           delay = 3.9 + j * .7;
-  else                                    delay = 1.1 + yn * 2.6 + j * .25;
-  return { mesh, ty: y, delay, drop: 13 + j * 8 };
-});
-const DUR = .75;
-const BUILD_END = Math.max(...piezas.map(p => p.delay)) + DUR;
-
-const easeOut = p => 1 - Math.pow(1 - p, 3);
-const clamp01 = v => Math.max(0, Math.min(1, v));
-
-/* ── camera ────────────────────────────────────── */
-const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 400);
-let camDist = 34;
-function fit() {
-  renderer.setSize(innerWidth, innerHeight);
-  const aspect = innerWidth / innerHeight;
-  camera.aspect = aspect;
-  // dolly out until the site fits both vertically and horizontally
-  const tanV = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
-  camDist = Math.max(11.5 / tanV, 8.5 / (tanV * aspect));
-  if (innerWidth > 940) {
-    // push the building toward the right half of the viewport
-    camera.setViewOffset(innerWidth, innerHeight, -innerWidth * .16, 0, innerWidth, innerHeight);
-  } else {
-    camera.clearViewOffset();
+  let renderer;
+  try {
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  } catch (e) {
+    window.__heroFallback('fallback', 'context-failed');
+    return;
   }
-  camera.updateProjectionMatrix();
-}
-fit(); addEventListener('resize', fit);
+  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, IS_MOBILE ? 1.5 : 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFShadowMap;
+  renderer.domElement.id = 'scene';
+  document.body.prepend(renderer.domElement);
 
-/* pointer parallax (desktop only) */
-let mx = 0, my = 0, tmx = 0, tmy = 0;
-if (matchMedia('(pointer:fine)').matches) {
-  addEventListener('pointermove', e => {
-    tmx = (e.clientX / innerWidth) * 2 - 1;
-    tmy = (e.clientY / innerHeight) * 2 - 1;
+  /* GPU context loss: give the browser 2s to restore it, then fall back */
+  renderer.domElement.addEventListener('webglcontextlost', e => {
+    e.preventDefault();
+    setTimeout(() => {
+      const gl = renderer.getContext();
+      if (gl && gl.isContextLost()) {
+        stopLoop();
+        window.__heroFallback('fallback', 'context-lost', true);
+      }
+    }, 2000);
   });
-}
+  renderer.domElement.addEventListener('webglcontextrestored', () => startLoop());
 
-/* ── HUD ───────────────────────────────────────── */
-const hud = document.getElementById('hud');
-const hudTxt = document.getElementById('hud-txt');
-const replayBtn = document.getElementById('replay');
-const srStatus = document.getElementById('sr-status');
-const secureMsg = () => innerWidth < 600 ? 'Scaffold secure' : 'Scaffold secure · OSHA 1926';
-let lastHud = '', announced = false;
-function setHud(msg, secure) {
-  if (msg !== lastHud) { hudTxt.textContent = msg; lastHud = msg; }
-  hud.classList.toggle('secure', !!secure);
-  if (secure && !announced) {           // announce completion once, not every %
-    srStatus.textContent = 'Scaffold assembled.';
-    announced = true;
-  }
-}
+  const scene = new THREE.Scene();
+  scene.add(new THREE.HemisphereLight(0xffffff, 0xd8d2c4, 1.0));
 
-const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-let t = reduced ? BUILD_END + .1 : 0;
-if (reduced) replayBtn.style.display = 'none';
+  const key = new THREE.DirectionalLight(0xffffff, 2.2);
+  key.position.set(20, 34, 26);
+  key.castShadow = true;
+  const sm = IS_MOBILE ? 1024 : 2048;
+  key.shadow.mapSize.set(sm, sm);
+  key.shadow.bias = -0.0002;
+  const span = 26;
+  key.shadow.camera.left = -span; key.shadow.camera.right = span;
+  key.shadow.camera.top = span; key.shadow.camera.bottom = -span;
+  key.shadow.camera.far = 120;
+  scene.add(key);
 
-replayBtn.addEventListener('click', () => { t = 0; });
+  const fillL = new THREE.DirectionalLight(0xfff4e6, 0.5);
+  fillL.position.set(-25, 15, -20);
+  scene.add(fillL);
 
-/* ── frame loop ────────────────────────────────── */
-const clock = new THREE.Clock();
-function frame(dt) {
-  t += dt;
+  const ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(400, 400),
+    new THREE.ShadowMaterial({ opacity: 0.18 })
+  );
+  ground.rotation.x = -Math.PI / 2;
+  ground.receiveShadow = true;
+  scene.add(ground);
 
-  if (t <= BUILD_END + .5) {
-    let ready = 0;
-    for (const p of piezas) {
-      const k = clamp01((t - p.delay) / DUR);
-      p.mesh.visible = t > p.delay;
-      p.mesh.position.y = p.ty + p.drop * (1 - easeOut(k));
-      if (k >= .55) ready++;
-    }
-    if (t >= BUILD_END) setHud(secureMsg(), true);
-    else setHud('Erecting · ' + Math.round((ready / piezas.length) * 100) + '%', false);
-  }
-
-  mx += (tmx - mx) * .04;
-  my += (tmy - my) * .04;
-  const a = .5 + Math.sin(t * .07) * .04 + mx * .05;
-  camera.position.set(Math.sin(a) * camDist, camDist * .38 - my * 1.1, Math.cos(a) * camDist);
-  camera.lookAt(0, 7.9, 0);
-  renderer.render(scene, camera);
-}
-
-if (reduced) {
-  // static hero: everything in place, one render per resize, no sway/parallax
-  for (const p of piezas) { p.mesh.visible = true; p.mesh.position.y = p.ty; }
-  setHud(secureMsg(), true);
-  const renderOnce = () => {
-    camera.position.set(Math.sin(.5) * camDist, camDist * .38, Math.cos(.5) * camDist);
-    camera.lookAt(0, 7.9, 0);
-    renderer.render(scene, camera);
+  /* ── materials ─────────────────────────────────── */
+  const M = {
+    wall:  new THREE.MeshStandardMaterial({ color: 0xc9b189, roughness: .95 }),
+    trim:  new THREE.MeshStandardMaterial({ color: 0xb49d73, roughness: .9 }),
+    glass: new THREE.MeshStandardMaterial({ color: 0x5a5343, roughness: .6 }),
+    steel: new THREE.MeshStandardMaterial({ color: 0xa7b0b8, roughness: .5, metalness: .4 }),
+    steelDark: new THREE.MeshStandardMaterial({ color: 0x7d858c, roughness: .55, metalness: .4 }),
+    wood:  new THREE.MeshStandardMaterial({ color: 0x9c7a4e, roughness: .85 }),
+    cone:  new THREE.MeshStandardMaterial({ color: 0xd95318, roughness: .6 }),
   };
-  renderOnce();
-  addEventListener('resize', renderOnce);            // fit() runs first
-  document.fonts?.ready?.then(() => renderOnce());   // banner texture redraw
-} else {
-  renderer.setAnimationLoop(() => frame(Math.min(clock.getDelta(), .05)));
+
+  /* ── helpers ───────────────────────────────────── */
+  const V3 = THREE.Vector3;
+  function box(parent, w, h, d, mat, x, y, z, name) {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+    m.position.set(x, y, z); m.name = name || '';
+    parent.add(m); return m;
+  }
+  function strut(parent, a, b, r, mat, name) {
+    const dir = new V3().subVectors(b, a);
+    const len = dir.length();
+    const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 10), mat);
+    m.position.copy(a).addScaledVector(dir, .5);
+    m.quaternion.setFromUnitVectors(new V3(0, 1, 0), dir.normalize());
+    m.name = name || '';
+    parent.add(m); return m;
+  }
+
+  /* ── the model ─────────────────────────────────── */
+  function buildSite() {
+    const g = new THREE.Group();
+    let id = 0;
+    const nm = p => `${p}_${id++}`;
+
+    /* old building — one static group, excluded from the drop */
+    const b = new THREE.Group();
+    b.name = 'edificio_viejo';
+    box(b, 10, 16.3, 9, M.wall, 0, 8.15, 0);                 // main volume
+    box(b, 10.5, 1.15, 9.5, M.trim, 0, .57, 0);              // plinth
+    box(b, 10.8, .5, 9.8, M.trim, 0, 16.1, 0);               // cornice
+    box(b, 2.6, 1.4, 2.2, M.wall, 2.4, 17.0, .8);            // stair bulkhead
+    box(b, 1.7, 2.7, .14, M.glass, 0, 1.35, 4.52);           // door
+    const rowsY = [3.6, 6.2, 8.8, 11.4, 14.0];
+    for (const cx of [-3.2, 0, 3.2]) for (const ry of rowsY) {
+      if (cx === 0 && ry === rowsY[0]) continue;             // door bay
+      box(b, 1.5, 1.95, .12, M.glass, cx, ry, 4.52);
+      box(b, 1.74, .14, .3, M.trim, cx, ry - 1.1, 4.58);
+    }
+    for (const cz of [-2.2, 1.4]) for (const ry of rowsY) {  // side windows
+      box(b, .12, 1.95, 1.5, M.glass, 5.02, ry, cz);
+      box(b, .3, .14, 1.74, M.trim, 5.08, ry - 1.1, cz);
+    }
+    g.add(b);
+
+    /* scaffold — every mesh a direct child of g so it can drop in */
+    const XS = [-5.6, -2.8, 0, 2.8, 5.6];    // frame positions
+    const ZI = 5.05, ZO = 6.25;              // inner / outer standard rows
+    const DECKS = [2.2, 4.8, 7.4, 10.0, 12.6, 15.2];
+    const LEVELS = [0.45, ...DECKS];
+    const BAYS = [-4.2, -1.4, 1.4, 4.2];     // bay centres
+
+    for (const x of XS) for (const z of [ZI, ZO]) {
+      box(g, .46, .08, .46, M.steelDark, x, .04, z, nm('placa'));      // base plate
+      box(g, .12, .4, .12, M.steelDark, x, .28, z, nm('placa_jack'));  // screw jack
+      const p = box(g, 1, 1, 1, M.steel, x, 8.3, z, nm('poste'));      // standard
+      p.geometry = new THREE.CylinderGeometry(.07, .07, 16.3, 10);
+    }
+    for (const x of XS) for (const y of LEVELS)                        // transoms
+      strut(g, new V3(x, y, ZI - .14), new V3(x, y, ZO + .14), .045, M.steel, nm('transom'));
+    for (let i = 0; i < 4; i++) for (const y of LEVELS) for (const z of [ZI, ZO])
+      strut(g, new V3(XS[i], y, z), new V3(XS[i + 1], y, z), .045, M.steel, nm('ledger'));
+    for (let i = 0; i < 4; i++) for (const y of DECKS) for (const dy of [.55, 1.05])
+      strut(g, new V3(XS[i], y + dy, ZO), new V3(XS[i + 1], y + dy, ZO), .04, M.steel, nm('rail'));
+    for (const bx of BAYS) for (const y of DECKS) {
+      for (const pz of [5.25, 5.65, 6.05])                             // deck planks
+        box(g, 2.66, .055, .37, M.wood, bx, y + .09, pz, nm('plataforma'));
+      box(g, 2.66, .24, .045, M.wood, bx, y + .24, 6.04, nm('plataforma_toe'));
+    }
+    for (let k = 0; k < 6; k++) {                                      // diagonal braces
+      const bIdx = k % 4;
+      strut(g, new V3(XS[bIdx], LEVELS[k], ZO + .1), new V3(XS[bIdx + 1], LEVELS[k + 1], ZO + .1),
+        .045, M.steelDark, nm('diagonal'));
+    }
+
+    /* company banner zip-tied to the guardrails */
+    const banner = new THREE.Mesh(
+      new THREE.PlaneGeometry(5.5, 1.18),
+      new THREE.MeshBasicMaterial({ map: makeBannerTexture(), side: THREE.DoubleSide })
+    );
+    banner.position.set(0, 10.8, 6.32);
+    banner.name = nm('banner');
+    g.add(banner);
+
+    /* a couple of cones for scale */
+    const coneGeo = new THREE.ConeGeometry(.3, .68, 20);
+    for (const [cx, cz] of [[7.6, 7.2], [-7.0, 5.6]]) {
+      const c = new THREE.Mesh(coneGeo, M.cone);
+      c.position.set(cx, .34, cz); c.name = nm('cone');
+      g.add(c);
+    }
+    return g;
+  }
+
+  function makeBannerTexture() {
+    const c = document.createElement('canvas');
+    c.width = 1024; c.height = 220;
+    const x = c.getContext('2d');
+    const draw = () => {
+      x.fillStyle = '#d95318'; x.fillRect(0, 0, 1024, 220);
+      x.strokeStyle = 'rgba(255,255,255,.5)'; x.lineWidth = 5;
+      x.strokeRect(16, 16, 992, 188);
+      x.fillStyle = '#fff'; x.textBaseline = 'middle';
+      x.font = '96px "Archivo Black", Arial, sans-serif';
+      x.fillText('UPRIGHT', 46, 88);
+      x.font = '600 40px Archivo, Arial, sans-serif';
+      x.fillText('SCAFFOLDING · (555) 012-4477', 48, 168);
+      tex.needsUpdate = true;
+    };
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.anisotropy = 4;
+    draw();
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
+    return tex;
+  }
+
+  const g = buildSite();
+  g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  scene.add(g);
+
+  /* ── motion preference ─────────────────────────── */
+  /* Reduce Motion users get a SHORT, SUBTLE build (~1.7s, small drop,
+     no camera sway/parallax, loop stops once settled) — never a frozen
+     frame. The media query is also watched live. */
+  const mq = matchMedia('(prefers-reduced-motion: reduce)');
+  const REDUCED = HERO_OVERRIDE === 'reduced' ? true
+                : HERO_OVERRIDE === '3d' ? false
+                : mq.matches;
+  let motionNow = !REDUCED;
+  if (HERO_OVERRIDE !== 'reduced' && HERO_OVERRIDE !== '3d') {
+    const onMQ = ev => { motionNow = !ev.matches; if (motionNow) startLoop(); };
+    if (mq.addEventListener) mq.addEventListener('change', onMQ);
+    else if (mq.addListener) mq.addListener(onMQ);
+  }
+
+  /* ── assembly animation (from the loading screen) ── */
+  const MAXY = 16.5;
+  const isPiece = c => c.name !== 'edificio_viejo';
+  const piezas = g.children.filter(isPiece).map(mesh => {
+    const y = mesh.position.y, yn = Math.min(y / MAXY, 1), j = Math.random(), n = mesh.name;
+    let delay;
+    if (/^(placa|base)/.test(n))            delay = j * .5;
+    else if (/^(poste|post)/.test(n))       delay = .25 + j * .85;
+    else if (/^(plataforma|deck)/.test(n))  delay = 1.6 + yn * 2.4 + j * .2;
+    else if (/^diagonal/.test(n))           delay = 3.9 + j * .7;
+    else                                    delay = 1.1 + yn * 2.6 + j * .25;
+    return { mesh, ty: y, delay, drop: 13 + j * 8 };
+  });
+  if (REDUCED) for (const p of piezas) { p.delay *= .22; p.drop = 2.2; }
+  const DUR = REDUCED ? .5 : .75;
+  const BUILD_END = Math.max(...piezas.map(p => p.delay)) + DUR;
+
+  const easeOut = p => 1 - Math.pow(1 - p, 3);
+  const clamp01 = v => Math.max(0, Math.min(1, v));
+
+  /* ── camera ────────────────────────────────────── */
+  const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 400);
+  let camDist = 34;
+  function fit() {
+    renderer.setSize(innerWidth, innerHeight);
+    const aspect = innerWidth / innerHeight;
+    camera.aspect = aspect;
+    // dolly out until the site fits both vertically and horizontally
+    const tanV = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+    camDist = Math.max(11.5 / tanV, 8.5 / (tanV * aspect));
+    if (innerWidth > 940) {
+      // push the building toward the right half of the viewport
+      camera.setViewOffset(innerWidth, innerHeight, -innerWidth * .16, 0, innerWidth, innerHeight);
+    } else {
+      camera.clearViewOffset();
+    }
+    camera.updateProjectionMatrix();
+    if (!running) { placeCamera(); renderer.render(scene, camera); }  // stopped loop still reflows
+  }
+
+  /* pointer parallax (desktop only; disabled under reduced motion) */
+  let mx = 0, my = 0, tmx = 0, tmy = 0;
+  if (matchMedia('(pointer:fine)').matches) {
+    addEventListener('pointermove', e => {
+      tmx = (e.clientX / innerWidth) * 2 - 1;
+      tmy = (e.clientY / innerHeight) * 2 - 1;
+    });
+  }
+
+  function placeCamera() {
+    const sway = motionNow ? Math.sin(t * .07) * .04 + mx * .05 : 0;
+    const lift = motionNow ? my * 1.1 : 0;
+    const a = .5 + sway;
+    camera.position.set(Math.sin(a) * camDist, camDist * .38 - lift, Math.cos(a) * camDist);
+    camera.lookAt(0, 7.9, 0);
+  }
+
+  /* ── HUD ───────────────────────────────────────── */
+  const hud = document.getElementById('hud');
+  const hudTxt = document.getElementById('hud-txt');
+  const replayBtn = document.getElementById('replay');
+  const srStatus = document.getElementById('sr-status');
+  const secureMsg = () => innerWidth < 600 ? 'Scaffold secure' : 'Scaffold secure · OSHA 1926';
+  let lastHud = '', announced = false;
+  function setHud(msg, secure) {
+    if (msg !== lastHud) { hudTxt.textContent = msg; lastHud = msg; }
+    hud.classList.toggle('secure', !!secure);
+    if (secure && !announced) {           // announce completion once, not every %
+      srStatus.textContent = 'Scaffold assembled.';
+      announced = true;
+    }
+  }
+
+  /* ── frame loop ────────────────────────────────── */
+  let t = 0;
+  const timer = new THREE.Timer();
+  let running = false, modeReported = false;
+
+  function frame(dt) {
+    t += dt;
+
+    if (t <= BUILD_END + .5) {
+      let ready = 0;
+      for (const p of piezas) {
+        const k = clamp01((t - p.delay) / DUR);
+        p.mesh.visible = t > p.delay;
+        p.mesh.position.y = p.ty + p.drop * (1 - easeOut(k));
+        if (k >= .55) ready++;
+      }
+      if (t >= BUILD_END) setHud(secureMsg(), true);
+      else setHud('Erecting · ' + Math.round((ready / piezas.length) * 100) + '%', false);
+    }
+
+    mx += (tmx - mx) * .04;
+    my += (tmy - my) * .04;
+    placeCamera();
+    renderer.render(scene, camera);
+
+    if (!modeReported) {
+      modeReported = true;
+      window.__setHeroMode(REDUCED ? 'reduced-motion' : 'full-3d');
+    }
+    // reduced motion: once settled there is nothing moving — stop the GPU
+    if (!motionNow && t > BUILD_END + 1) stopLoop();
+  }
+
+  function startLoop() {
+    if (running) return;
+    running = true;
+    timer.update();                       // swallow time spent stopped
+    renderer.setAnimationLoop(() => {
+      try {
+        timer.update();
+        frame(Math.min(timer.getDelta(), .05));
+      } catch (err) {                     // a runtime crash mid-flight → fallback, never a frozen canvas
+        console.error('[hero] frame crashed:', err);
+        stopLoop();
+        window.__heroFallback('error', 'frame-crash', true);
+      }
+    });
+  }
+  function stopLoop() { renderer.setAnimationLoop(null); running = false; }
+
+  /* intro/skip hooks */
+  const introHeld = () =>
+    document.documentElement.className.indexOf('intro-boot') >= 0 && !window.__introDone;
+  window.__heroFinish = () => { t = BUILD_END + .1; startLoop(); };
+
+  replayBtn.addEventListener('click', () => { t = 0; startLoop(); });
+
+  /* bfcache restore (back/forward nav) counts as a page load: replay.
+     If the intro is replaying too, hold the first frame until it hands off. */
+  addEventListener('pageshow', e => {
+    if (!e.persisted) return;
+    t = 0;
+    if (introHeld()) {
+      stopLoop();
+      placeCamera(); renderer.render(scene, camera);
+      window.__heroKickoff = () => startLoop();
+    } else {
+      startLoop();
+    }
+  });
+
+  fit(); addEventListener('resize', fit);
+
+  if (window.__heroFinishPending) {              // user skipped the intro before we booted
+    window.__heroFinishPending = false;
+    t = BUILD_END + .1;
+    startLoop();
+  } else if (introHeld()) {
+    /* hold the hero's first frame (building, no scaffold) behind the
+       intro overlay — shaders compile now, so the handoff is jank-free */
+    placeCamera(); renderer.render(scene, camera);
+    if (!modeReported) {
+      modeReported = true;
+      window.__setHeroMode(REDUCED ? 'reduced-motion' : 'full-3d');
+    }
+    window.__heroKickoff = () => startLoop();
+  } else {
+    startLoop();
+  }
 }
+
+boot().catch(err => {
+  console.error('[hero] init failed:', err);
+  window.__heroFallback('error', String(err && err.message || err).slice(0, 60));
+});
 </script>
 </body>
 </html>
