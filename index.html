@@ -518,9 +518,21 @@ if (!/[?&]intro=off/.test(location.search)) {
   window.addEventListener('unhandledrejection', function () {
     if (window.__heroMode === 'pending') window.__heroFallback('error', 'promise-rejection');
   });
-  setTimeout(function () {
-    if (window.__heroMode === 'pending') window.__heroFallback('error', 'load-timeout');
-  }, 10000);
+  /* load watchdog — but a background tab gets no animation frames, so
+     the hero cannot report in; only count time while the page is visible */
+  function watchdog() {
+    if (window.__heroMode !== 'pending') return;
+    if (document.hidden) {
+      document.addEventListener('visibilitychange', function once() {
+        if (document.hidden) return;
+        document.removeEventListener('visibilitychange', once);
+        setTimeout(watchdog, 4000);
+      });
+      return;
+    }
+    window.__heroFallback('error', 'load-timeout');
+  }
+  setTimeout(watchdog, 10000);
   /* independent guard: the intro overlay may never trap the page. If the
      intro controller dies, clear the overlay and let the hero run. */
   setTimeout(function () {
@@ -987,7 +999,8 @@ if (!/[?&]intro=off/.test(location.search)) {
   const section = document.getElementById('projects');
   const label = document.getElementById('block-label');
   if (!host || !section) return;
-  const hide = why => { host.classList.add('is-empty'); if (window.console) console.warn('[city-block]', why); };
+  let cleanup = () => {}, hostIO = null;
+  const hide = why => { cleanup(); host.classList.add('is-empty'); if (window.console) console.warn('[city-block]', why); };
   try {
     const probe = document.createElement('canvas');
     if (!(window.WebGLRenderingContext && (probe.getContext('webgl2') || probe.getContext('webgl')))) return hide('no-webgl');
@@ -1018,7 +1031,8 @@ if (!/[?&]intro=off/.test(location.search)) {
 
     /* ── environment ─────────────────────────────── */
     const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const LITE = innerWidth < 768;           // no tyre spin / sway, no shadows
+    const LITE = innerWidth < 768 ||         // per spec: no tyre spin / sway (and no shadows)
+      (matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 768);
     const clamp01 = v => Math.max(0, Math.min(1, v));
     const lerp = (a, b, k) => a + (b - a) * k;
 
@@ -1137,30 +1151,43 @@ if (!/[?&]intro=off/.test(location.search)) {
     }
 
     /* ── trucks: regroup parts so each truck moves as one ───────── */
+    const EDGE = { x: 46, z: 36 };                      // asphalt plane extents
+    const SPEED = 4, GAP = 3, WHEEL_R = 0.5, FADE = 6;  // FADE: opacity ramp (units) at the frame edge
     function truckOf(n) {
       const parts = Object.values(meshes).filter(m => m.name.indexOf('truck_' + n + '_') === 0);
       const box = new THREE.Box3();
       for (const m of parts) box.union(new THREE.Box3(new THREE.Vector3(...m.userData.o.min), new THREE.Vector3(...m.userData.o.max)));
       const c = box.getCenter(new THREE.Vector3());
-      const g = new THREE.Group();
-      g.position.set(c.x, 0, c.z);
-      for (const m of parts) { m.position.sub(g.position); g.add(m); }
-      lateGroup.add(g);
       const size = box.getSize(new THREE.Vector3());
       const alongX = size.x > size.z;                   // the model's long axis = travel axis
+      /* lane = the truck's own position — unless something is parked in it
+         (the skip sits in truck 1's near lane): then take the far lane */
+      let laneX = c.x, laneZ = c.z;
+      const sk = meshes.skip_body.userData.o;
+      if (alongX && Math.abs(c.z - (sk.min[2] + sk.max[2]) / 2) < size.z / 2 + (sk.max[2] - sk.min[2]) / 2 + .5) laneZ = EDGE.z - 3;
+      if (!alongX && Math.abs(c.x - (sk.min[0] + sk.max[0]) / 2) < size.x / 2 + (sk.max[0] - sk.min[0]) / 2 + .5) laneX = EDGE.x - 3;
+      const g = new THREE.Group();
+      const origin = new THREE.Vector3(c.x, 0, c.z);
+      for (const m of parts) { m.position.sub(origin); g.add(m); }
+      g.position.set(laneX, 0, laneZ);
+      lateGroup.add(g);
       const cab = meshes['truck_' + n + '_cab'].userData.o;
       const cabMid = alongX ? (cab.min[0] + cab.max[0]) / 2 : (cab.min[2] + cab.max[2]) / 2;
       const dir = alongX ? Math.sign(cabMid - c.x) : Math.sign(cabMid - c.z);   // cab end = front
       const wheels = parts.filter(m => /_(tyre|hub)_\d+$/.test(m.name));
       const load = parts.find(m => /_load_tubes$/.test(m.name));
-      return { g, alongX, dir, len: alongX ? size.x : size.z, lane: alongX ? c.z : c.x,
-               home: alongX ? c.x : c.z, wheels, load, cabTop: cab.max[1] + .32,
-               cabAt: alongX ? cabMid - c.x : cabMid - c.z,
-               p: alongX ? c.x : c.z, waiting: false, waited: 0, beacon: null };
+      return { g, alongX, dir, len: alongX ? size.x : size.z, width: alongX ? size.z : size.x,
+               lane: alongX ? laneZ : laneX, wheels, load, mats: parts.map(m => m.material),
+               cabTop: cab.max[1] + .32, cabAt: alongX ? cabMid - c.x : cabMid - c.z,
+               p: alongX ? laneX : laneZ, waiting: false, waited: 0, alpha: 1, beacon: null };
     }
     const trucks = [truckOf(1), truckOf(2)];
-    const EDGE = { x: 46, z: 36 };                      // asphalt plane extents
-    const SPEED = 4, GAP = 3, WHEEL_R = 0.5;
+    /* the two lanes cross on the asphalt: each truck yields at the other's lane */
+    for (let i = 0; i < 2; i++) {
+      const tr = trucks[i], other = trucks[1 - i];
+      tr.cross = other.lane;
+      tr.zone = tr.len / 2 + other.width / 2 + 1;
+    }
 
     /* amber beacons: cab roofs + skip */
     const beacons = [];
@@ -1169,7 +1196,7 @@ if (!/[?&]intro=off/.test(location.search)) {
         new THREE.MeshBasicMaterial({ color: 0xffb300 }));
       const halo = new THREE.Mesh(new THREE.SphereGeometry(.55, 14, 10),
         new THREE.MeshBasicMaterial({ color: 0xffb300, transparent: true, opacity: .25, depthWrite: false }));
-      core.position.set(x, y, z); halo.position.copy(core.position);
+      core.position.set(x, y, z);                    // the halo stays at the core's origin
       core.add(halo); parent.add(core);
       beacons.push({ core, halo, phase: beacons.length * .27 });
       return core;
@@ -1185,7 +1212,13 @@ if (!/[?&]intro=off/.test(location.search)) {
     renderer.shadowMap.enabled = !LITE;
     renderer.shadowMap.type = THREE.PCFShadowMap;
     host.prepend(renderer.domElement);
-    renderer.domElement.addEventListener('webglcontextlost', e => { e.preventDefault(); stop(); hide('context-lost'); });
+    let lostTimer = 0;
+    renderer.domElement.addEventListener('webglcontextlost', e => {
+      e.preventDefault(); stop();
+      lostTimer = setTimeout(() => hide('context-lost'), 8000);   // give the GPU a chance to come back
+    });
+    renderer.domElement.addEventListener('webglcontextrestored', () => { clearTimeout(lostTimer); fit(); start(); });
+    cleanup = () => { try { stop(); removeEventListener('resize', fit); if (hostIO) hostIO.disconnect(); } catch (e) {} };
 
     const camera = new THREE.PerspectiveCamera(30, 1, 1, 600);
     const TARGET = new THREE.Vector3(0, 7, 2);
@@ -1214,8 +1247,11 @@ if (!/[?&]intro=off/.test(location.search)) {
 
     /* ── build-up (scroll progress → state) ─────── */
     function progress() {
-      const r = section.getBoundingClientRect(), vh = innerHeight;
-      return clamp01((vh - r.top) / (vh * .7));         // 0: section enters at bottom, 1: top hits 30%
+      /* measured on the block itself (not the section header) so every
+         stage happens on screen: 0 when its top enters at the bottom of
+         the viewport, 1 when its top reaches 30% of the viewport */
+      const r = host.getBoundingClientRect(), vh = innerHeight;
+      return clamp01((vh - r.top) / (vh * .7));
     }
     const WINDOWS = { apartment: [.2, .45], church: [.35, .6], tower: [.5, .75], warehouse: [.65, .9] };
     function setOpacity(mats, a) {
@@ -1245,33 +1281,56 @@ if (!/[?&]intro=off/.test(location.search)) {
     host.__dbg = () => ({ p: built, frozen, baseY: +baseGroup.position.y.toFixed(2),
       clip: BUILDINGS.map(b => b + ':' + clipPlanes[b].constant.toFixed(1)),
       late: lateGroup.visible, running,
-      trucks: trucks.map(tr => [+tr.p.toFixed(1), tr.waiting, tr.g.visible]) });
+      trucks: trucks.map(tr => [+tr.p.toFixed(1), tr.waiting, tr.g.visible, +tr.alpha.toFixed(2)]),
+      lanes: trucks.map(tr => tr.lane), zones: trucks.map(tr => +tr.zone.toFixed(1)) });
     host.__scrub = p => { if (!frozen) { built = p; apply(p); draw(); } return host.__dbg(); };   // test aid
     host.__progress = progress;
     if (REDUCED) { apply(1); frozen = true; }
 
     /* ── idle loop ───────────────────────────────── */
     let t = 0;
+    function reenter(tr) {
+      const half = tr.len / 2 + FADE, edge = tr.alongX ? EDGE.x : EDGE.z;
+      tr.waiting = false; tr.waited = 0; tr.p = -tr.dir * (edge + half); tr.g.visible = true;
+    }
     function idle(dt) {
       t += dt;
       for (let i = 0; i < 2; i++) {
-        const tr = trucks[i], other = trucks[1 - i], half = tr.len / 2 + 2;
+        const tr = trucks[i], other = trucks[1 - i], half = tr.len / 2 + FADE;
         const edge = tr.alongX ? EDGE.x : EDGE.z;
         if (tr.waiting) {
           tr.waited += dt;
-          if (tr.waited >= GAP || other.waiting) {     // re-enter; never both off-screen
-            tr.waiting = false; tr.p = -tr.dir * (edge + half); tr.g.visible = true;
-          }
+          if (tr.waited >= GAP || other.waiting) reenter(tr);   // never both off-screen
         } else {
-          const d = SPEED * dt;
-          tr.p += tr.dir * d;
-          if (!LITE) {
-            const rot = d / WHEEL_R;                     // roll about the axle
-            for (const w of tr.wheels) { if (tr.alongX) w.rotation.z -= rot * tr.dir; else w.rotation.x += rot * tr.dir; }
-            if (tr.load) tr.load.rotation.y = Math.sin(t * 2.4 + i * 1.7) * (1.5 * Math.PI / 180);
+          const d = SPEED * dt, np = tr.p + tr.dir * d;
+          const inZone = q => Math.abs(q - tr.cross) < tr.zone;
+          const otherOnCrossing = !other.waiting && Math.abs(other.p - other.cross) < other.zone;
+          if (otherOnCrossing && inZone(np) && !inZone(tr.p)) {
+            /* yield: the other truck is on the crossing — hold at the line */
+          } else {
+            tr.p = np;
+            if (!LITE) {
+              const rot = d / WHEEL_R;                   // roll about the axle
+              for (const w of tr.wheels) { if (tr.alongX) w.rotation.z -= rot * tr.dir; else w.rotation.x += rot * tr.dir; }
+              if (tr.load) tr.load.rotation.y = Math.sin(t * 2.4 + i * 1.7) * (1.5 * Math.PI / 180);
+            }
           }
           if (tr.dir * tr.p > edge + half) { tr.waiting = true; tr.waited = 0; tr.g.visible = false; }
         }
+        if (tr.alongX) tr.g.position.x = tr.p; else tr.g.position.z = tr.p;
+        /* ease in and out over the last FADE units instead of popping */
+        const toExit = (edge + half) - tr.dir * tr.p, sinceEntry = tr.dir * tr.p + (edge + half);
+        const alpha = tr.waiting ? 0 : clamp01(Math.min(toExit, sinceEntry) / FADE);
+        if (alpha !== tr.alpha) {
+          tr.alpha = alpha;
+          for (const m of tr.mats) { m.opacity = alpha; m.transparent = alpha < 1; }
+          if (tr.beacon) tr.beacon.visible = alpha > .05;
+        }
+      }
+      // if both left in the same frame, the longer-waiting one comes straight back (before this frame renders)
+      if (trucks[0].waiting && trucks[1].waiting) {
+        const tr = trucks[0].waited >= trucks[1].waited ? trucks[0] : trucks[1];
+        reenter(tr);
         if (tr.alongX) tr.g.position.x = tr.p; else tr.g.position.z = tr.p;
       }
       for (const bc of beacons) {
@@ -1316,8 +1375,14 @@ if (!/[?&]intro=off/.test(location.search)) {
       tmy = ((e.clientY - r.top) / r.height) * 2 - 1;
       ndc.set(tmx, -tmy); needPick = true;
     });
-    host.addEventListener('pointerleave', () => { tmx = tmy = 0; ndc.set(-2, -2); needPick = true; });
-    host.addEventListener('click', () => {
+    host.addEventListener('pointerleave', e => {
+      if (e.pointerType === 'touch') return;             // a tap "leaves" before its click lands
+      tmx = tmy = 0; ndc.set(-2, -2); needPick = true;
+    });
+    host.addEventListener('click', e => {
+      const r = host.getBoundingClientRect();            // pick right here, not on the next frame
+      ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -(((e.clientY - r.top) / r.height) * 2 - 1));
+      pick();
       pinned = (hover && hover !== pinned) ? hover : null;
       for (const b of BUILDINGS) tint(b, b === hover || b === pinned);
       showLabel(hover || pinned); cards(pinned);
@@ -1344,7 +1409,8 @@ if (!/[?&]intro=off/.test(location.search)) {
     function start() { if (running) return; running = true; timer.update(); renderer.setAnimationLoop(frame); }
     function stop() { renderer.setAnimationLoop(null); running = false; }
     if ('IntersectionObserver' in window) {
-      new IntersectionObserver(en => { en[0].isIntersecting ? start() : stop(); }, { threshold: 0 }).observe(host);
+      hostIO = new IntersectionObserver(en => { en[0].isIntersecting ? start() : stop(); }, { threshold: 0 });
+      hostIO.observe(host);
     } else start();
     addEventListener('resize', fit);
     if (!REDUCED) apply(0);
