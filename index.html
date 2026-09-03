@@ -315,6 +315,119 @@
     /* fallback hero: shorter, softer settle instead of the full drop */
     .fb-p{transform:translateY(-10px);animation-duration:.4s}
   }
+
+  /* ── case-study sections (fictional data) ─────── */
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+  .section{position:relative;z-index:10;background:var(--bg);
+    padding:clamp(72px,9vw,120px) clamp(20px,4vw,52px)}
+  .section>.wrap{max-width:1440px;margin:0 auto}
+  .sec-head{display:flex;align-items:flex-end;justify-content:space-between;gap:32px;
+    margin-bottom:clamp(36px,5vw,64px)}
+  .sec-head .eyebrow{margin-bottom:14px}
+  h2{font-family:"Archivo Black",Archivo,sans-serif;font-weight:400;
+    font-size:clamp(30px,3.6vw,52px);line-height:1.02;text-transform:uppercase;
+    letter-spacing:-.005em;max-width:16ch}
+  h2 em{font-style:normal;color:var(--accent)}
+  .sec-head p{max-width:40ch;color:var(--body);font-size:16px;line-height:1.6}
+  /* services */
+  .services{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
+  .svc{border:1px solid var(--hair);border-radius:12px;padding:26px 24px 28px;
+    background:rgba(255,255,255,.32);transition:transform .2s,border-color .2s}
+  .svc:hover{transform:translateY(-3px);border-color:rgba(33,28,19,.35)}
+  .svc svg{display:block;margin-bottom:22px;color:var(--ink)}
+  .svc h3{font-size:17px;font-weight:700;letter-spacing:.01em;margin-bottom:10px}
+  .svc p{font-size:14.5px;line-height:1.6;color:var(--body)}
+  .svc small{display:block;margin-top:16px;font-family:"IBM Plex Mono",monospace;
+    font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  /* projects */
+  .projects{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
+  .proj{display:block;color:inherit;text-decoration:none;border-radius:12px;overflow:hidden;
+    border:1px solid var(--hair);background:rgba(255,255,255,.32);transition:transform .2s}
+  .proj:hover{transform:translateY(-3px)}
+  .proj .pic{height:220px;position:relative;
+    background:
+      repeating-linear-gradient(90deg,transparent 0 46px,#a7b0b8 46px 49px),
+      repeating-linear-gradient(0deg,transparent 0 38px,#a7b0b8 38px 41px),
+      var(--wall,#c9b189)}
+  .proj .pic::after{content:"";position:absolute;inset:auto 0 0 0;height:34%;
+    background:linear-gradient(180deg,rgba(236,230,218,0),rgba(236,230,218,.6))}
+  .proj .tag{position:absolute;top:14px;left:14px;z-index:1;background:var(--accent-bright);color:#fff;
+    font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.16em;
+    text-transform:uppercase;padding:6px 9px;border-radius:5px}
+  .proj .body{padding:20px 22px 24px}
+  .proj h3{font-size:18px;font-weight:700;margin-bottom:4px}
+  .proj .loc{font-size:14px;color:var(--body);margin-bottom:14px}
+  .proj dl{display:flex;gap:22px}
+  .proj dt{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+  .proj dd{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--ink);font-weight:500}
+  /* safety (dark band) */
+  .safety{background:var(--ink);color:#f1ece2}
+  .safety .eyebrow{color:#b7ae9c}
+  .safety h2{color:#fff}
+  .safety .sec-head p{color:#c9c1b1}
+  .safe-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+    border-top:1px solid rgba(255,255,255,.14)}
+  .safe{padding:28px 26px 30px 0;border-right:1px solid rgba(255,255,255,.14);margin-right:26px}
+  .safe:last-child{border-right:0;margin-right:0}
+  .safe b{display:block;font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:13px;
+    letter-spacing:.2em;color:var(--accent-bright);margin-bottom:14px}
+  .safe h3{font-size:17px;font-weight:700;margin-bottom:8px;color:#fff}
+  .safe p{font-size:14px;line-height:1.6;color:#c9c1b1}
+  /* contact */
+  .contact-grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);
+    gap:clamp(32px,6vw,96px);align-items:start}
+  .contact-grid .eyebrow{margin-bottom:14px}
+  .contact-grid .lead{margin-top:18px;color:var(--body);line-height:1.65;max-width:44ch;font-size:16px}
+  .details{margin-top:32px;display:grid;gap:18px}
+  .details div{display:grid;gap:3px}
+  .details dt{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--muted)}
+  .details dd{font-size:16px;color:var(--ink)}
+  .details a{color:inherit;text-decoration:none;border-bottom:1px solid var(--hair)}
+  form.quote{display:grid;grid-template-columns:1fr 1fr;gap:16px;border:1px solid var(--hair);
+    border-radius:14px;padding:clamp(22px,3vw,36px);background:rgba(255,255,255,.4)}
+  form.quote label{display:grid;gap:7px;font-family:"IBM Plex Mono",monospace;font-size:10.5px;
+    letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  form.quote .full{grid-column:1/-1}
+  form.quote input,form.quote select,form.quote textarea{
+    font:15px/1.4 Archivo,sans-serif;color:var(--ink);background:#fff;
+    border:1px solid var(--hair);border-radius:8px;padding:12px 14px;width:100%}
+  form.quote textarea{min-height:110px;resize:vertical}
+  form.quote input:focus,form.quote select:focus,form.quote textarea:focus{
+    outline:2px solid var(--accent);outline-offset:1px;border-color:transparent}
+  form.quote .btn{justify-self:start;border:0;cursor:pointer;font-family:inherit}
+  form.quote .sent{grid-column:1/-1;font-size:16px;line-height:1.6;color:var(--ink);padding:8px 0}
+  /* footer */
+  footer{position:relative;z-index:10;background:var(--bg);border-top:1px solid var(--hair);
+    padding:34px clamp(20px,4vw,52px) 40px}
+  footer .wrap{max-width:1440px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:18px 36px}
+  footer .foot-links{display:flex;gap:22px}
+  footer .foot-links a{color:var(--body);text-decoration:none;font-size:14px}
+  footer .foot-links a:hover{color:var(--ink)}
+  footer .note{margin-left:auto;font-family:"IBM Plex Mono",monospace;font-size:11px;line-height:1.6;
+    letter-spacing:.06em;color:var(--muted);max-width:56ch;text-align:right}
+  /* fixed chrome once the hero scrolls out of view */
+  html.past-hero #hud,html.past-hero .cue{opacity:0;pointer-events:none;transition:opacity .3s}
+  html.past-hero nav{background:rgba(236,230,218,.86);backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--hair);
+    padding-top:14px;padding-bottom:14px}
+  nav{transition:opacity .9s ease .55s,background .3s,padding .3s,border-color .3s}
+  @media (max-width:940px){
+    .services{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .projects{grid-template-columns:1fr}
+    .safe-grid{grid-template-columns:1fr 1fr}
+    .safe{border-right:0;margin-right:0;padding-right:0;border-bottom:1px solid rgba(255,255,255,.14)}
+    .contact-grid{grid-template-columns:1fr}
+    .sec-head{flex-direction:column;align-items:flex-start;gap:14px}
+    footer .note{margin-left:0;text-align:left}
+  }
+  @media (max-width:600px){
+    .services{grid-template-columns:1fr}
+    .safe-grid{grid-template-columns:1fr}
+    form.quote{grid-template-columns:1fr}
+  }
 </style>
 </head>
 <body>
@@ -640,7 +753,7 @@ if (!/[?&]intro=off/.test(location.search)) {
       your crew can get on with the build.
     </p>
     <div class="cta-row rv" style="--d:.95s">
-      <a class="btn" href="mailto:quotes@uprightscaffolding.com?subject=Quote%20request">
+      <a class="btn" href="#contact">
         Get a free quote
         <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
           <path d="M2 8h11M9 3.5 13.5 8 9 12.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
@@ -655,6 +768,181 @@ if (!/[?&]intro=off/.test(location.search)) {
     </div>
   </div>
 </header>
+
+<!-- ── case-study sections — fictional company, illustrative data ── -->
+<section class="section" id="services">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <p class="eyebrow"><i></i>What we do</p>
+        <h2>Access for every <em>stage</em> of the build.</h2>
+      </div>
+      <p>From the first lift to the final strike, one crew owns the structure. Design, delivery, erection, inspection and dismantle — no subcontractors in between.</p>
+    </div>
+    <div class="services">
+      <article class="svc">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 22V2M19 22V2M5 6.5h14M5 12h14M5 17.5h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M5 17.5 19 6.5" stroke="#c94b10" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <h3>Façade &amp; access scaffolding</h3>
+        <p>System and tube-and-clamp scaffolds for new build, recladding and restoration. Engineered drawings included above 40 ft.</p>
+        <small>Most requested</small>
+      </article>
+      <article class="svc">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 22V4M20 22V4M4 20h4v-4h4v-4h4V8h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 4h16" stroke="#c94b10" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <h3>Stair towers &amp; hoists</h3>
+        <p>Public-access stair towers, loading bays and material hoists that keep every trade moving between floors.</p>
+        <small>Rental or supply</small>
+      </article>
+      <article class="svc">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 21h18M7 21V9l5-5 5 5v12M12 4v17" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 14h10" stroke="#c94b10" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <h3>Shoring &amp; temporary works</h3>
+        <p>Propping, needling and temporary roofs designed by our in-house engineers, with stamped calcs in the quote.</p>
+        <small>Engineered</small>
+      </article>
+      <article class="svc">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M9 3V2h6v1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="m9 12.5 2 2 4-4" stroke="#c94b10" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <h3>Inspection &amp; maintenance</h3>
+        <p>Tagged, logged and re-inspected every seven days. Photo reports land in your inbox the same afternoon.</p>
+        <small>Included</small>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="projects">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <p class="eyebrow"><i></i>Recent work</p>
+        <h2>Built on <em>schedule</em>, struck on time.</h2>
+      </div>
+      <p>A few of the 1,200+ structures we've put up across the Northeast — from heritage brickwork to distribution roofs.</p>
+    </div>
+    <div class="projects">
+      <a class="proj" href="#contact">
+        <div class="pic" style="--wall:#c9b189"><span class="tag">Restoration</span></div>
+        <div class="body">
+          <h3>Harbor Point Residences</h3>
+          <p class="loc">Baltimore, MD · Façade restoration</p>
+          <dl><div><dt>Height</dt><dd>14 storeys</dd></div><div><dt>On site</dt><dd>26 weeks</dd></div><div><dt>Lifts</dt><dd>18</dd></div></dl>
+        </div>
+      </a>
+      <a class="proj" href="#contact">
+        <div class="pic" style="--wall:#b07a62"><span class="tag">Heritage</span></div>
+        <div class="body">
+          <h3>Lincoln Mill Conversion</h3>
+          <p class="loc">Providence, RI · Brickwork &amp; window replacement</p>
+          <dl><div><dt>Height</dt><dd>6 storeys</dd></div><div><dt>On site</dt><dd>11 weeks</dd></div><div><dt>Lifts</dt><dd>8</dd></div></dl>
+        </div>
+      </a>
+      <a class="proj" href="#contact">
+        <div class="pic" style="--wall:#b9b4a8"><span class="tag">Industrial</span></div>
+        <div class="body">
+          <h3>Northgate Distribution Hub</h3>
+          <p class="loc">Newark, NJ · Roof access &amp; shoring</p>
+          <dl><div><dt>Area</dt><dd>9,800 m²</dd></div><div><dt>On site</dt><dd>5 weeks</dd></div><div><dt>Crew</dt><dd>12</dd></div></dl>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="section safety" id="safety">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <p class="eyebrow"><i></i>Safety</p>
+        <h2>Safety <em>is</em> the schedule.</h2>
+      </div>
+      <p>A stopped site costs more than any scaffold. Every Upright structure is signed off by a Competent Person before handover and re-inspected every seven days — or after any storm, strike or alteration.</p>
+    </div>
+    <div class="safe-grid">
+      <div class="safe"><b>01</b><h3>Competent Person on every site</h3><p>OSHA-trained supervisors erect, alter and dismantle. Nobody else touches the structure.</p></div>
+      <div class="safe"><b>02</b><h3>Engineered above 40 ft</h3><p>Stamped drawings and load calculations by our in-house engineers, included in the quote.</p></div>
+      <div class="safe"><b>03</b><h3>Seven-day inspection cycle</h3><p>Tagged, logged and photographed. Reports reach the site manager the same day.</p></div>
+      <div class="safe"><b>04</b><h3>$10M liability cover</h3><p>Fully insured, working to OSHA 1926 Subpart L and ANSI/ASSP A10.8. Certificates on request.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="contact">
+  <div class="wrap contact-grid">
+    <div>
+      <p class="eyebrow"><i></i>Get a quote</p>
+      <h2>Tell us about the <em>site.</em></h2>
+      <p class="lead">Send the address, the height and the trades that need access. A project manager calls back within one business day with a price and a start date.</p>
+      <dl class="details">
+        <div><dt>Phone</dt><dd><a href="tel:+15550124477">(555) 012-4477</a> · 24/7 emergency line</dd></div>
+        <div><dt>Email</dt><dd><a href="mailto:quotes@uprightscaffolding.com">quotes@uprightscaffolding.com</a></dd></div>
+        <div><dt>Yard</dt><dd>1480 Industrial Pkwy, Unit 7 · Newark, NJ 07105</dd></div>
+        <div><dt>Hours</dt><dd>Mon–Fri 6:30–17:00</dd></div>
+      </dl>
+    </div>
+    <form class="quote" id="quote-form" novalidate>
+      <label>Name<input name="name" type="text" autocomplete="name"></label>
+      <label>Company<input name="company" type="text" autocomplete="organization"></label>
+      <label>Email<input name="email" type="email" autocomplete="email"></label>
+      <label>Project type
+        <select name="type">
+          <option>Façade / access scaffold</option>
+          <option>Stair tower or hoist</option>
+          <option>Shoring / temporary works</option>
+          <option>Inspection only</option>
+        </select>
+      </label>
+      <label class="full">Site address &amp; brief<textarea name="brief" placeholder="Address, approx. height, trades on site, target start date…"></textarea></label>
+      <button class="btn full" type="submit">
+        Request a quote
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2 8h11M9 3.5 13.5 8 9 12.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </form>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <a class="logo" href="#">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M5 22V2M19 22V2M5 6.5h14M5 12h14M5 17.5h14" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+        <path d="M5 17.5 19 6.5" stroke="#c94b10" stroke-width="1.9" stroke-linecap="round"/>
+      </svg>
+      <span><b>UPRIGHT</b><small>SCAFFOLDING CO.</small></span>
+    </a>
+    <div class="foot-links">
+      <a href="#services">Services</a><a href="#projects">Projects</a><a href="#safety">Safety</a><a href="#contact">Contact</a>
+    </div>
+    <p class="note">© 2026 Upright Scaffolding Co. — a fictional company. Built as a portfolio case study; all names, figures and projects are illustrative.</p>
+  </div>
+</footer>
+
+<script>
+/* sections: hide the hero's fixed chrome once it scrolls away, and a
+   fake quote form (case study — nothing is sent). Fully guarded so it
+   can never trip the hero's error boundary. */
+(function () {
+  try {
+    var hero = document.querySelector('.hero'), html = document.documentElement;
+    if (hero && 'IntersectionObserver' in window) {
+      new IntersectionObserver(function (en) {
+        var out = en[0].intersectionRatio < 0.12;
+        html.className = html.className.replace(' past-hero', '') + (out ? ' past-hero' : '');
+      }, { threshold: [0, 0.12, 0.3] }).observe(hero);
+    }
+    var form = document.getElementById('quote-form');
+    if (form) form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var el = form.elements['name'];
+      var name = (el && el.value || '').trim().split(' ')[0];
+      var p = document.createElement('p');
+      p.className = 'sent';
+      p.textContent = 'Thanks' + (name ? ', ' + name : '') +
+        ' — a project manager will call you within one business day with a price and a start date.';
+      form.innerHTML = '';
+      form.appendChild(p);
+    });
+  } catch (e) { if (window.console) console.warn('[sections]', e); }
+})();
+</script>
+
 
 <div id="hud">
   <span class="dot"></span>
