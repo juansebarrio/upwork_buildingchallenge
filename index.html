@@ -436,6 +436,25 @@
     .safe-grid{grid-template-columns:1fr}
     form.quote{grid-template-columns:1fr}
   }
+  /* projects: city-block 3D viewport */
+  .block3d{position:relative;height:clamp(340px,50vw,620px);margin-bottom:clamp(28px,4vw,48px);
+    border:1px solid var(--line);background-image:var(--grid);background-size:48px 48px;
+    overflow:hidden;cursor:crosshair;touch-action:pan-y}
+  .block3d.is-empty{display:none}
+  .block3d canvas{display:block;width:100%;height:100%}
+  .block3d-label{position:absolute;left:18px;bottom:18px;background:var(--ink);color:#fff;
+    padding:10px 14px 9px;font-family:var(--fc);pointer-events:none;max-width:min(70%,360px)}
+  .block3d-label b{display:block;font-weight:700;font-size:20px;line-height:1}
+  .block3d-label span{display:block;font-weight:500;font-size:12.5px;letter-spacing:.08em;
+    text-transform:uppercase;color:#b8bec3;margin-top:5px}
+  .block3d-label.pinned{outline:3px solid var(--yellow)}
+  .block3d-hint{position:absolute;right:18px;top:16px;font-family:var(--fc);font-weight:600;
+    font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);pointer-events:none}
+  .proj.is-selected .body{border-color:var(--yellow)}
+  @media (max-width:940px){
+    .block3d{height:clamp(300px,72vw,520px)}
+    .block3d-hint{display:none}
+  }
 </style>
 </head>
 <body>
@@ -825,6 +844,10 @@ if (!/[?&]intro=off/.test(location.search)) {
       </div>
       <p>A few of the 1,200+ structures we've put up across the Northeast — from heritage brickwork to distribution roofs.</p>
     </div>
+    <div class="block3d" id="city-block" aria-label="3D overview of a live site: four buildings under scaffold, trucks and site fencing">
+      <div class="block3d-label" id="block-label" hidden><b></b><span></span></div>
+      <div class="block3d-hint">Hover a building · click to pin</div>
+    </div>
     <div class="projects">
       <a class="proj" href="#contact">
         <div class="pic" style="--wall:#c9b189"><span class="tag">Restoration</span></div>
@@ -950,6 +973,387 @@ if (!/[?&]intro=off/.test(location.search)) {
   } catch (e) { if (window.console) console.warn('[sections]', e); }
 })();
 </script>
+<script type="module">
+/* ════════════════════════════════════════════════════════════════════
+   Projects — city-block viewport (assets/city-block.bin, converted
+   from upright-city-block.obj). Fully independent of the hero: its own
+   renderer and loop, lazy-loaded when the section approaches, hidden
+   on any failure. Two animation layers:
+     1. scroll-driven build-up (pure lerps on section progress, frozen at 1)
+     2. autonomous idle loop (trucks, tyres, load sway, amber beacons)
+   ════════════════════════════════════════════════════════════════════ */
+(async function () {
+  const host = document.getElementById('city-block');
+  const section = document.getElementById('projects');
+  const label = document.getElementById('block-label');
+  if (!host || !section) return;
+  const hide = why => { host.classList.add('is-empty'); if (window.console) console.warn('[city-block]', why); };
+  try {
+    const probe = document.createElement('canvas');
+    if (!(window.WebGLRenderingContext && (probe.getContext('webgl2') || probe.getContext('webgl')))) return hide('no-webgl');
+
+    /* lazy: only fetch the model once the section is ~1 screen away.
+       IntersectionObserver is the primary trigger; a scroll/resize check
+       backs it up for documents where IO does not deliver (hidden tabs,
+       prerender, some webviews). */
+    await new Promise(res => {
+      let done = false;
+      const near = () => section.getBoundingClientRect().top < innerHeight + 900;
+      const go = () => { if (done) return; done = true; io && io.disconnect();
+        removeEventListener('scroll', check); removeEventListener('resize', check); res(); };
+      const check = () => { if (near()) go(); };
+      let io = null;
+      if ('IntersectionObserver' in window) {
+        io = new IntersectionObserver(en => { if (en[0].isIntersecting) go(); }, { rootMargin: '900px 0px' });
+        io.observe(section);
+      }
+      addEventListener('scroll', check, { passive: true });
+      addEventListener('resize', check);
+      check();
+    });
+    const THREE = await import('./vendor/three.module.js');
+    const resp = await fetch('assets/city-block.bin');
+    if (!resp.ok) return hide('model ' + resp.status);
+    const buf = await resp.arrayBuffer();
+
+    /* ── environment ─────────────────────────────── */
+    const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const LITE = innerWidth < 768;           // no tyre spin / sway, no shadows
+    const clamp01 = v => Math.max(0, Math.min(1, v));
+    const lerp = (a, b, k) => a + (b - a) * k;
+
+    /* ── parse the binary ───────────────────────── */
+    const dv = new DataView(buf);
+    const hlen = dv.getUint32(0, true);
+    const H = JSON.parse(new TextDecoder().decode(new Uint8Array(buf, 4, hlen)));
+    const inv = 1 / H.scale;
+    function geometry(o) {
+      const g = new THREE.BufferGeometry();
+      const pq = new Int16Array(buf, H.posBase + o.posOff, o.nv * 3);
+      const pos = new Float32Array(o.nv * 3);
+      for (let i = 0; i < pos.length; i++) pos[i] = pq[i] * inv;
+      g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      g.setAttribute('normal', new THREE.BufferAttribute(new Int8Array(buf, H.nrmBase + o.nrmOff, o.nv * 3), 3, true));
+      const idx = o.idx32 ? new Uint32Array(buf, H.idxBase + o.idxOff, o.ni)
+                          : new Uint16Array(buf, H.idxBase + o.idxOff, o.ni);
+      g.setIndex(new THREE.BufferAttribute(idx, 1));
+      g.boundingSphere = null;
+      return g;
+    }
+
+    /* materials: Kd straight from the MTL (linear), finish by name */
+    const MTL = {
+      asphalt: [.0242, .0252, .0296, .95, 0], concrete: [.3325, .314, .2789, .9, 0],
+      scaffold_tube: [.0595, .0648, .0762, .45, .55], scaffold_deck: [.6038, .4564, .2122, .85, 0],
+      terracotta_brick: [.4793, .117, .0482, .9, 0], stone: [.5029, .4564, .3763, .85, 0],
+      window_dark: [.0137, .0242, .0409, .35, .2], roof_membrane: [.1812, .1714, .1529, .9, 0],
+      steel_cladding: [.4072, .4397, .4735, .5, .4], steel_dark: [.0887, .0999, .1144, .55, .4],
+      door: [.0273, .0307, .0356, .6, .1], glass_blue: [.1981, .2961, .402, .25, .3],
+      spandrel: [.0437, .063, .0865, .5, .3], slate: [.0685, .0762, .0953, .7, .1],
+      truck_paint: [.7991, .7835, .7379, .45, .2], tyre: [.011, .011, .0123, .95, 0],
+      galvanized: [.4851, .5089, .5333, .45, .6], skip_paint: [.7454, .3916, .0242, .6, .1],
+      fence_mesh: [.5395, .5647, .5906, .6, .5],
+    };
+    function material(name) {
+      const k = MTL[name] || [.5, .5, .5, .8, 0];
+      const m = new THREE.MeshStandardMaterial({ roughness: k[3], metalness: k[4] });
+      m.color.setRGB(k[0], k[1], k[2], THREE.LinearSRGBColorSpace);
+      if (name === 'fence_mesh') { m.transparent = true; m.opacity = .32; m.side = THREE.DoubleSide; }
+      return m;
+    }
+
+    /* ── scene ──────────────────────────────────── */
+    const scene = new THREE.Scene();
+    const city = new THREE.Group(); scene.add(city);
+    scene.add(new THREE.HemisphereLight(0xe8ecef, 0x6b7075, 0.9));
+    const sun = new THREE.DirectionalLight(0xffffff, 2.1);
+    sun.position.set(60, 95, 45);
+    if (!LITE) {
+      sun.castShadow = true;
+      sun.shadow.mapSize.set(2048, 2048);
+      sun.shadow.bias = -0.0005;
+      const s = 72;
+      sun.shadow.camera.left = -s; sun.shadow.camera.right = s;
+      sun.shadow.camera.top = s; sun.shadow.camera.bottom = -s;
+      sun.shadow.camera.far = 260;
+    }
+    scene.add(sun);
+
+    const BUILDINGS = ['apartment', 'church', 'tower', 'warehouse'];   // build order
+    const SCAFFOLD = {                                                   // what "rises" per building
+      apartment: ['apartment_scaffold_tubes', 'apartment_scaffold_timber'],
+      church:    ['church_scaffold_tubes', 'church_scaffold_timber'],
+      tower:     ['tower_scaffold_tubes', 'tower_scaffold_timber'],
+      warehouse: ['warehouse_guardrail', 'warehouse_toeboards'],        // no *_scaffold_* on the warehouse
+    };
+    const INFO = {
+      apartment: ['Harbor Point Residences', 'Façade restoration · 14 storeys', 0],
+      church:    ['St. Brendan’s Church', 'Heritage stone · spire access', 1],
+      tower:     ['Meridian Tower', 'Curtain-wall recladding · 12 storeys', -1],
+      warehouse: ['Northgate Distribution Hub', 'Roof access & shoring', 2],
+    };
+    const scaffoldOwner = {};
+    for (const b of BUILDINGS) for (const n of SCAFFOLD[b]) scaffoldOwner[n] = b;
+
+    const baseGroup = new THREE.Group();   // ground + buildings (phase 1)
+    const lateGroup = new THREE.Group();   // trucks, skip, fencing (phase 3)
+    city.add(baseGroup, lateGroup);
+    const baseMats = [], lateMats = [], meshes = {}, byBuilding = {};
+    const clipPlanes = {}, scaffoldMeshes = {};
+    for (const b of BUILDINGS) {
+      clipPlanes[b] = new THREE.Plane(new THREE.Vector3(0, -1, 0), 0);   // keeps y <= constant
+      scaffoldMeshes[b] = []; byBuilding[b] = [];
+    }
+
+    for (const o of H.objects) {
+      const mesh = new THREE.Mesh(geometry(o), material(o.mtl));
+      mesh.position.set(o.pivot[0], o.pivot[1], o.pivot[2]);
+      mesh.name = o.name;
+      mesh.userData.o = o;
+      mesh.castShadow = !LITE && o.name !== 'asphalt' && o.name !== 'sidewalk';
+      mesh.receiveShadow = !LITE;
+      meshes[o.name] = mesh;
+      const owner = scaffoldOwner[o.name];
+      if (owner) {                                     // rising scaffold: clipped per building
+        mesh.material.clippingPlanes = [clipPlanes[owner]];
+        mesh.material.clipShadows = true;
+        scaffoldMeshes[owner].push(mesh);
+        city.add(mesh);
+      } else if (/^(truck_|skip_|site_fencing_)/.test(o.name)) {
+        lateMats.push(mesh.material);
+        lateGroup.add(mesh);
+      } else {
+        baseMats.push(mesh.material);
+        baseGroup.add(mesh);
+        const b = BUILDINGS.find(k => o.name.indexOf(k + '_') === 0);
+        if (b) { mesh.userData.building = b; byBuilding[b].push(mesh); }
+      }
+    }
+    const scaffoldRange = {};
+    for (const b of BUILDINGS) {
+      let lo = Infinity, hi = -Infinity;
+      for (const m of scaffoldMeshes[b]) { lo = Math.min(lo, m.userData.o.min[1]); hi = Math.max(hi, m.userData.o.max[1]); }
+      scaffoldRange[b] = [lo - .1, hi + .2];
+    }
+
+    /* ── trucks: regroup parts so each truck moves as one ───────── */
+    function truckOf(n) {
+      const parts = Object.values(meshes).filter(m => m.name.indexOf('truck_' + n + '_') === 0);
+      const box = new THREE.Box3();
+      for (const m of parts) box.union(new THREE.Box3(new THREE.Vector3(...m.userData.o.min), new THREE.Vector3(...m.userData.o.max)));
+      const c = box.getCenter(new THREE.Vector3());
+      const g = new THREE.Group();
+      g.position.set(c.x, 0, c.z);
+      for (const m of parts) { m.position.sub(g.position); g.add(m); }
+      lateGroup.add(g);
+      const size = box.getSize(new THREE.Vector3());
+      const alongX = size.x > size.z;                   // the model's long axis = travel axis
+      const cab = meshes['truck_' + n + '_cab'].userData.o;
+      const cabMid = alongX ? (cab.min[0] + cab.max[0]) / 2 : (cab.min[2] + cab.max[2]) / 2;
+      const dir = alongX ? Math.sign(cabMid - c.x) : Math.sign(cabMid - c.z);   // cab end = front
+      const wheels = parts.filter(m => /_(tyre|hub)_\d+$/.test(m.name));
+      const load = parts.find(m => /_load_tubes$/.test(m.name));
+      return { g, alongX, dir, len: alongX ? size.x : size.z, lane: alongX ? c.z : c.x,
+               home: alongX ? c.x : c.z, wheels, load, cabTop: cab.max[1] + .32,
+               cabAt: alongX ? cabMid - c.x : cabMid - c.z,
+               p: alongX ? c.x : c.z, waiting: false, waited: 0, beacon: null };
+    }
+    const trucks = [truckOf(1), truckOf(2)];
+    const EDGE = { x: 46, z: 36 };                      // asphalt plane extents
+    const SPEED = 4, GAP = 3, WHEEL_R = 0.5;
+
+    /* amber beacons: cab roofs + skip */
+    const beacons = [];
+    function beacon(parent, x, y, z) {
+      const core = new THREE.Mesh(new THREE.SphereGeometry(.24, 14, 10),
+        new THREE.MeshBasicMaterial({ color: 0xffb300 }));
+      const halo = new THREE.Mesh(new THREE.SphereGeometry(.55, 14, 10),
+        new THREE.MeshBasicMaterial({ color: 0xffb300, transparent: true, opacity: .25, depthWrite: false }));
+      core.position.set(x, y, z); halo.position.copy(core.position);
+      core.add(halo); parent.add(core);
+      beacons.push({ core, halo, phase: beacons.length * .27 });
+      return core;
+    }
+    for (const t of trucks) t.beacon = beacon(t.g, t.alongX ? t.cabAt : 0, t.cabTop, t.alongX ? 0 : t.cabAt);
+    { const s = meshes.skip_body.userData.o;
+      beacon(lateGroup, (s.min[0] + s.max[0]) / 2, s.max[1] + .3, (s.min[2] + s.max[2]) / 2); }
+
+    /* ── renderer & camera ───────────────────────── */
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(devicePixelRatio || 1, LITE ? 1.5 : 1.75));
+    renderer.localClippingEnabled = true;
+    renderer.shadowMap.enabled = !LITE;
+    renderer.shadowMap.type = THREE.PCFShadowMap;
+    host.prepend(renderer.domElement);
+    renderer.domElement.addEventListener('webglcontextlost', e => { e.preventDefault(); stop(); hide('context-lost'); });
+
+    const camera = new THREE.PerspectiveCamera(30, 1, 1, 600);
+    const TARGET = new THREE.Vector3(0, 7, 2);
+    const VIEW = new THREE.Vector3(1, .78, 1.12).normalize();
+    let camDist = 150;
+    function fit() {
+      const w = host.clientWidth, h = host.clientHeight;
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h;
+      const tanV = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+      const R = 52;
+      camDist = Math.max(R / tanV, R / (tanV * camera.aspect)) * .92;
+      camera.updateProjectionMatrix();
+      if (!running) draw();
+    }
+
+    /* hover parallax */
+    let mx = 0, my = 0, tmx = 0, tmy = 0;
+    function placeCamera() {
+      const a = Math.atan2(VIEW.x, VIEW.z) + mx * .07;
+      const y = VIEW.y + my * -.06;
+      const dir = new THREE.Vector3(Math.sin(a), y, Math.cos(a)).normalize();
+      camera.position.copy(TARGET).addScaledVector(dir, camDist);
+      camera.lookAt(TARGET);
+    }
+
+    /* ── build-up (scroll progress → state) ─────── */
+    function progress() {
+      const r = section.getBoundingClientRect(), vh = innerHeight;
+      return clamp01((vh - r.top) / (vh * .7));         // 0: section enters at bottom, 1: top hits 30%
+    }
+    const WINDOWS = { apartment: [.2, .45], church: [.35, .6], tower: [.5, .75], warehouse: [.65, .9] };
+    function setOpacity(mats, a) {
+      for (const m of mats) {
+        if (m.userData.fixedAlpha === undefined) m.userData.fixedAlpha = m.opacity;   // fence keeps its .32
+        m.opacity = m.userData.fixedAlpha * a;
+        m.transparent = a < 1 || m.userData.fixedAlpha < 1;
+      }
+    }
+    function apply(p) {
+      const a = clamp01(p / .2);
+      baseGroup.position.y = lerp(-2, 0, a);
+      setOpacity(baseMats, a);
+      for (const b of BUILDINGS) {
+        const [s, e] = WINDOWS[b], k = clamp01((p - s) / (e - s));
+        clipPlanes[b].constant = lerp(scaffoldRange[b][0], scaffoldRange[b][1], k);
+        for (const m of scaffoldMeshes[b]) m.visible = k > 0;
+      }
+      const l = clamp01((p - .9) / .1);
+      setOpacity(lateMats, l);
+      lateGroup.visible = l > 0;
+      for (const bc of beacons) bc.core.visible = l > 0;
+      host.dataset.progress = p.toFixed(2);
+    }
+    let built = -1, frozen = false;
+    /* debug hook (read from devtools): state of the build-up and the trucks */
+    host.__dbg = () => ({ p: built, frozen, baseY: +baseGroup.position.y.toFixed(2),
+      clip: BUILDINGS.map(b => b + ':' + clipPlanes[b].constant.toFixed(1)),
+      late: lateGroup.visible, running,
+      trucks: trucks.map(tr => [+tr.p.toFixed(1), tr.waiting, tr.g.visible]) });
+    host.__scrub = p => { if (!frozen) { built = p; apply(p); draw(); } return host.__dbg(); };   // test aid
+    host.__progress = progress;
+    if (REDUCED) { apply(1); frozen = true; }
+
+    /* ── idle loop ───────────────────────────────── */
+    let t = 0;
+    function idle(dt) {
+      t += dt;
+      for (let i = 0; i < 2; i++) {
+        const tr = trucks[i], other = trucks[1 - i], half = tr.len / 2 + 2;
+        const edge = tr.alongX ? EDGE.x : EDGE.z;
+        if (tr.waiting) {
+          tr.waited += dt;
+          if (tr.waited >= GAP || other.waiting) {     // re-enter; never both off-screen
+            tr.waiting = false; tr.p = -tr.dir * (edge + half); tr.g.visible = true;
+          }
+        } else {
+          const d = SPEED * dt;
+          tr.p += tr.dir * d;
+          if (!LITE) {
+            const rot = d / WHEEL_R;                     // roll about the axle
+            for (const w of tr.wheels) { if (tr.alongX) w.rotation.z -= rot * tr.dir; else w.rotation.x += rot * tr.dir; }
+            if (tr.load) tr.load.rotation.y = Math.sin(t * 2.4 + i * 1.7) * (1.5 * Math.PI / 180);
+          }
+          if (tr.dir * tr.p > edge + half) { tr.waiting = true; tr.waited = 0; tr.g.visible = false; }
+        }
+        if (tr.alongX) tr.g.position.x = tr.p; else tr.g.position.z = tr.p;
+      }
+      for (const bc of beacons) {
+        const k = .5 + .5 * Math.sin((t / .8 + bc.phase) * Math.PI * 2);
+        bc.core.material.color.setHex(0xffb300).multiplyScalar(.35 + .65 * k);
+        bc.halo.material.opacity = .08 + .3 * k;
+        bc.halo.scale.setScalar(.8 + .5 * k);
+      }
+    }
+
+    /* ── hover / select ──────────────────────────── */
+    const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(-2, -2);
+    const bodies = [];
+    for (const b of BUILDINGS) for (const m of byBuilding[b]) bodies.push(m);   // trucks etc. never raycast
+    let hover = null, pinned = null, needPick = false;
+    function tint(b, on) { for (const m of byBuilding[b]) m.material.emissive.setHex(on ? 0x5a4a00 : 0); }
+    function showLabel(b) {
+      if (!b) { label.hidden = true; return; }
+      label.hidden = false; label.firstElementChild.textContent = INFO[b][0];
+      label.lastElementChild.textContent = INFO[b][1];
+      label.classList.toggle('pinned', pinned === b);
+    }
+    function cards(b) {
+      document.querySelectorAll('.proj').forEach((c, i) => c.classList.toggle('is-selected', b && INFO[b][2] === i));
+    }
+    function pick() {
+      needPick = false;
+      ray.setFromCamera(ndc, camera);
+      const hit = ray.intersectObjects(bodies, false)[0];
+      const b = hit ? hit.object.userData.building : null;
+      if (b !== hover) {
+        if (hover && hover !== pinned) tint(hover, false);
+        hover = b;
+        if (hover) tint(hover, true);
+        showLabel(hover || pinned);
+        host.style.cursor = hover ? 'pointer' : 'crosshair';
+      }
+    }
+    host.addEventListener('pointermove', e => {
+      const r = host.getBoundingClientRect();
+      tmx = ((e.clientX - r.left) / r.width) * 2 - 1;
+      tmy = ((e.clientY - r.top) / r.height) * 2 - 1;
+      ndc.set(tmx, -tmy); needPick = true;
+    });
+    host.addEventListener('pointerleave', () => { tmx = tmy = 0; ndc.set(-2, -2); needPick = true; });
+    host.addEventListener('click', () => {
+      pinned = (hover && hover !== pinned) ? hover : null;
+      for (const b of BUILDINGS) tint(b, b === hover || b === pinned);
+      showLabel(hover || pinned); cards(pinned);
+    });
+
+    /* ── loop (only while the block is on screen) ── */
+    const timer = new THREE.Timer();
+    let running = false;
+    function draw() { placeCamera(); renderer.render(scene, camera); }
+    function frame() {
+      timer.update();
+      const dt = Math.min(timer.getDelta(), .05);
+      if (!frozen) {
+        const p = progress();
+        if (p !== built) { built = p; apply(p); }
+        if (p >= 1) { frozen = true; host.dataset.frozen = '1'; }
+      } else if (!REDUCED) {
+        idle(dt);
+      }
+      mx += (tmx - mx) * .06; my += (tmy - my) * .06;
+      if (needPick) pick();
+      draw();
+    }
+    function start() { if (running) return; running = true; timer.update(); renderer.setAnimationLoop(frame); }
+    function stop() { renderer.setAnimationLoop(null); running = false; }
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(en => { en[0].isIntersecting ? start() : stop(); }, { threshold: 0 }).observe(host);
+    } else start();
+    addEventListener('resize', fit);
+    if (!REDUCED) apply(0);
+    fit();
+    label.hidden = true;
+  } catch (e) { hide(e && e.message || e); }
+})();
+</script>
+
 
 
 <div id="hud">
